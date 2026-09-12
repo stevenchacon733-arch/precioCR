@@ -4,16 +4,13 @@ import { useMemo, useState } from "react";
 import { money, products } from "@/lib/data";
 
 function MiniChart({ values }) {
-  const width = 520;
-  const height = 150;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const width = 520, height = 150;
+  const min = Math.min(...values), max = Math.max(...values);
   const pts = values.map((v, i) => {
     const x = (i / (values.length - 1)) * width;
     const y = height - ((v - min) / Math.max(1, max - min)) * (height - 24) - 12;
     return `${x},${y}`;
   }).join(" ");
-
   return (
     <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Historial de precios">
       <defs>
@@ -28,22 +25,20 @@ function MiniChart({ values }) {
   );
 }
 
-function Score({ score }) {
-  let text = "Precio normal";
-  if (score >= 90) text = "Excelente precio";
-  else if (score >= 80) text = "Buen precio";
-  else if (score < 60) text = "Precio alto";
-
+function Score({ score, type }) {
+  const text = score >= 90 ? "Excelente precio" : score >= 80 ? "Buen precio" : score < 60 ? "Precio alto" : "Precio normal";
   return (
     <div className="scoreCard">
       <div>
         <span className="eyebrow">PRECIOCR SCORE</span>
         <h3>{text}</h3>
-        <p>Calculado a partir de ofertas comparables y el promedio detectado.</p>
+        <p>
+          {type === "car"
+            ? "Referencia basada en precio, año, kilometraje y ofertas comparables."
+            : "Referencia basada en modelo, variante, condición y ofertas comparables."}
+        </p>
       </div>
-      <div className="scoreCircle">
-        <strong>{score}</strong><span>/100</span>
-      </div>
+      <div className="scoreCircle"><strong>{score}</strong><span>/100</span></div>
     </div>
   );
 }
@@ -53,38 +48,46 @@ export default function PriceApp() {
   const [selected, setSelected] = useState(products[0]);
   const [mode, setMode] = useState("comprar");
   const [condition, setCondition] = useState("9");
-  const [showAll, setShowAll] = useState(false);
+  const [category, setCategory] = useState("all");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(p =>
-      `${p.name} ${p.category} ${p.summary}`.toLowerCase().includes(q)
-    );
-  }, [query]);
+    return products.filter(p => {
+      const matchesCategory = category === "all" || p.type === category;
+      const matchesQuery = !q || `${p.name} ${p.category} ${p.summary}`.toLowerCase().includes(q);
+      return matchesCategory && matchesQuery;
+    });
+  }, [query, category]);
 
-  const displayOffers = showAll ? selected.offers : selected.offers.slice(0, 3);
   const conditionFactor = Number(condition) / 10;
   const adjustedSell = Math.round(selected.sellRecommended * conditionFactor / 1000) * 1000;
 
   const choose = (product) => {
     setSelected(product);
     setQuery(product.name);
-    setShowAll(false);
+    setCategory(product.type);
     setTimeout(() => document.getElementById("resultado")?.scrollIntoView({ behavior: "smooth" }), 20);
+  };
+
+  const selectCategory = (cat) => {
+    setCategory(cat);
+    setQuery("");
+    const first = products.find(p => p.type === cat);
+    if (first) setSelected(first);
   };
 
   return (
     <>
       <header className="navWrap">
         <nav className="nav shell">
-          <a className="brand" href="#top" aria-label="PrecioCR inicio">
+          <a className="brand" href="#top">
             <span className="brandMark">₡</span>
             <span>Precio<span>CR</span></span>
           </a>
           <div className="navLinks">
             <a href="#resultado">Explorar</a>
-            <a href="#categorias">Categorías</a>
+            <a href="#categorias">Autos</a>
+            <a href="#categorias">Tecnología</a>
             <a href="#como-funciona">Cómo funciona</a>
           </div>
           <a className="navButton" href="#resultado">Comparar ahora</a>
@@ -93,26 +96,30 @@ export default function PriceApp() {
 
       <main id="top">
         <section className="hero">
-          <div className="heroGlow glowOne" />
-          <div className="heroGlow glowTwo" />
           <div className="shell heroInner">
-            <div className="badge">🇨🇷 Hecho para comprar mejor en Costa Rica</div>
-            <h1>Descubre cuánto vale<br/><span>realmente.</span></h1>
+            <div className="badge">🇨🇷 Precios de autos y tecnología en Costa Rica</div>
+            <h1>Compra al precio<br/><span>correcto.</span></h1>
             <p className="heroText">
-              Compara precios, identifica buenas ofertas y calcula cuánto deberías pagar o pedir al vender.
+              Compara carros y aparatos tecnológicos, detecta oportunidades y estima cuánto deberías pagar o vender.
             </p>
+
+            <div className="categorySwitch" id="categorias">
+              <button className={category === "all" ? "active" : ""} onClick={() => setCategory("all")}>Todo</button>
+              <button className={category === "car" ? "active" : ""} onClick={() => selectCategory("car")}>🚗 Autos</button>
+              <button className={category === "tech" ? "active" : ""} onClick={() => selectCategory("tech")}>📱 Tecnología</button>
+            </div>
 
             <div className="searchBox">
               <span className="searchIcon">⌕</span>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Busca iPhone 15, PS5, freidora de aire..."
+                placeholder={category === "car" ? "Busca Tucson 2024, Corolla 2021..." : category === "tech" ? "Busca iPhone 15, PS5, MacBook..." : "Busca un carro o aparato tecnológico..."}
               />
               <button onClick={() => filtered[0] && choose(filtered[0])}>Buscar precio</button>
             </div>
 
-            {query && (
+            {(query || category !== "all") && (
               <div className="searchDropdown">
                 {filtered.length ? filtered.map(p => (
                   <button key={p.id} onClick={() => choose(p)}>
@@ -120,22 +127,14 @@ export default function PriceApp() {
                     <span><strong>{p.name}</strong><small>{p.summary}</small></span>
                     <b>{money(p.lowest)}</b>
                   </button>
-                )) : (
-                  <div className="empty">Todavía no tenemos ese producto en la demo.</div>
-                )}
+                )) : <div className="empty">Todavía no tenemos ese producto en la demo.</div>}
               </div>
             )}
 
-            <div className="quickLinks" id="categorias">
-              {["Tecnología", "Gaming", "Hogar", "Supermercado", "Autos", "Herramientas"].map(x =>
-                <span key={x}>{x}</span>
-              )}
-            </div>
-
             <div className="trustRow">
-              <span>✓ Fuentes visibles</span>
-              <span>✓ Precios comparables</span>
-              <span>✓ Recomendación de compra y venta</span>
+              <span>✓ Autos nuevos y usados</span>
+              <span>✓ Tecnología nueva y usada</span>
+              <span>✓ Precio recomendado para comprar o vender</span>
             </div>
           </div>
         </section>
@@ -143,14 +142,11 @@ export default function PriceApp() {
         <section className="section shell" id="resultado">
           <div className="sectionHead">
             <div>
-              <span className="eyebrow">RESULTADO DE BÚSQUEDA</span>
+              <span className="eyebrow">{selected.type === "car" ? "AUTO ANALIZADO" : "PRODUCTO ANALIZADO"}</span>
               <h2>{selected.name}</h2>
               <p>{selected.summary}</p>
             </div>
-            <div className="updated">
-              <span className="liveDot"></span>
-              Datos demostrativos
-            </div>
+            <div className="updated"><span className="liveDot"></span> Datos demostrativos</div>
           </div>
 
           <div className="tabs">
@@ -161,42 +157,26 @@ export default function PriceApp() {
           {mode === "comprar" ? (
             <>
               <div className="metricGrid">
-                <div className="metricCard">
-                  <span>Mejor precio encontrado</span>
-                  <strong>{money(selected.lowest)}</strong>
-                  <small>entre ofertas comparables</small>
-                </div>
-                <div className="metricCard">
-                  <span>Promedio detectado</span>
-                  <strong>{money(selected.average)}</strong>
-                  <small>mercado analizado</small>
-                </div>
-                <div className="metricCard accentMetric">
-                  <span>Comprar por debajo de</span>
-                  <strong>{money(selected.buyMax)}</strong>
-                  <small>nuestro precio objetivo</small>
-                </div>
+                <div className="metricCard"><span>Mejor precio encontrado</span><strong>{money(selected.lowest)}</strong><small>entre ofertas comparables</small></div>
+                <div className="metricCard"><span>Promedio detectado</span><strong>{money(selected.average)}</strong><small>mercado analizado</small></div>
+                <div className="metricCard accentMetric"><span>Comprar por debajo de</span><strong>{money(selected.buyMax)}</strong><small>nuestro precio objetivo</small></div>
               </div>
 
-              <Score score={selected.score} />
+              <Score score={selected.score} type={selected.type} />
 
               <div className="contentGrid">
                 <div className="panel">
                   <div className="panelHead">
-                    <div>
-                      <span className="eyebrow">OFERTAS</span>
-                      <h3>Precios encontrados</h3>
-                    </div>
+                    <div><span className="eyebrow">OFERTAS</span><h3>Precios encontrados</h3></div>
                     <span className="count">{selected.offers.length} fuentes</span>
                   </div>
-
                   <div className="offers">
-                    {displayOffers.map((offer, i) => (
+                    {selected.offers.map((offer, i) => (
                       <div className="offer" key={`${offer.store}-${i}`}>
                         <div className="storeLogo">{offer.store.slice(0,1)}</div>
                         <div className="offerMain">
                           <strong>{offer.store}</strong>
-                          <span>{offer.condition} · Fuente: {offer.source}</span>
+                          <span>{offer.condition} · {offer.meta} · Fuente: {offer.source}</span>
                         </div>
                         <div className="offerPrice">
                           <strong>{money(offer.price)}</strong>
@@ -205,10 +185,6 @@ export default function PriceApp() {
                       </div>
                     ))}
                   </div>
-
-                  <button className="outlineButton" onClick={() => setShowAll(!showAll)}>
-                    {showAll ? "Ver menos" : "Ver todas las ofertas"}
-                  </button>
                 </div>
 
                 <div className="panel">
@@ -226,19 +202,21 @@ export default function PriceApp() {
             <div className="sellGrid">
               <div className="panel">
                 <span className="eyebrow">ESTIMADOR DE VENTA</span>
-                <h3>¿En qué estado está?</h3>
-                <p className="muted">Ajustamos la recomendación según el estado del producto.</p>
-                <div className="rangeHeader">
-                  <span>Estado</span><strong>{condition}/10</strong>
-                </div>
+                <h3>{selected.type === "car" ? "Estado general del vehículo" : "Estado del producto"}</h3>
+                <p className="muted">
+                  {selected.type === "car"
+                    ? "En la versión real también tomaremos en cuenta kilometraje, año, versión y transmisión."
+                    : "En la versión real también tomaremos en cuenta batería, capacidad, accesorios y garantía."}
+                </p>
+                <div className="rangeHeader"><span>Estado</span><strong>{condition}/10</strong></div>
                 <input className="range" type="range" min="5" max="10" step="1" value={condition} onChange={e => setCondition(e.target.value)} />
-                <div className="conditionLabels"><span>Usado</span><span>Como nuevo</span></div>
+                <div className="conditionLabels"><span>Usado</span><span>Excelente</span></div>
               </div>
 
               <div className="panel sellResult">
                 <span className="eyebrow">PRECIO RECOMENDADO</span>
                 <h3>{money(adjustedSell)}</h3>
-                <p>Una referencia competitiva para publicar tu producto.</p>
+                <p>Referencia competitiva para publicar en Costa Rica.</p>
                 <div className="sellBands">
                   <div><span>Venta rápida</span><b>{money(Math.round(adjustedSell * .9 / 1000) * 1000)}</b></div>
                   <div><span>Recomendado</span><b>{money(adjustedSell)}</b></div>
@@ -252,26 +230,15 @@ export default function PriceApp() {
         <section className="darkSection" id="como-funciona">
           <div className="shell">
             <div className="centerHead">
-              <span className="eyebrow light">CÓMO FUNCIONA</span>
-              <h2>De muchos precios, una decisión clara.</h2>
-              <p>PrecioCR convierte ofertas dispersas en una referencia fácil de entender.</p>
+              <span className="eyebrow light">ENFOQUE INICIAL</span>
+              <h2>Autos y tecnología. Nada más por ahora.</h2>
+              <p>Esto nos permite comparar mejor productos con modelos, versiones y características identificables.</p>
             </div>
             <div className="steps">
-              <div><b>01</b><h3>Busca</h3><p>Escribe el producto exacto que quieres comprar o vender.</p></div>
-              <div><b>02</b><h3>Comparamos</h3><p>Normalizamos variantes, condición y precios de fuentes disponibles.</p></div>
-              <div><b>03</b><h3>Decide</h3><p>Recibes un rango de precio justo y nuestro PrecioCR Score.</p></div>
+              <div><b>01</b><h3>Identificamos</h3><p>Marca, modelo, año y versión en autos; modelo, capacidad y variante en tecnología.</p></div>
+              <div><b>02</b><h3>Separamos</h3><p>No mezclamos nuevo con usado ni versiones diferentes en el mismo promedio.</p></div>
+              <div><b>03</b><h3>Recomendamos</h3><p>Calculamos precio objetivo de compra, venta rápida y precio recomendado.</p></div>
             </div>
-          </div>
-        </section>
-
-        <section className="ctaSection">
-          <div className="shell ctaCard">
-            <div>
-              <span className="eyebrow">PRECIOCR</span>
-              <h2>Antes de comprar, revisa cuánto vale.</h2>
-              <p>Empieza con cualquiera de los productos demo y prueba la experiencia.</p>
-            </div>
-            <button onClick={() => { setQuery("PlayStation 5 Slim"); choose(products[1]); }}>Probar una búsqueda</button>
           </div>
         </section>
       </main>
@@ -279,8 +246,8 @@ export default function PriceApp() {
       <footer>
         <div className="shell footerInner">
           <div className="brand"><span className="brandMark">₡</span><span>Precio<span>CR</span></span></div>
-          <p>El precio justo de Costa Rica.</p>
-          <p>© 2026 PrecioCR · MVP demostrativo</p>
+          <p>Autos + Tecnología · Costa Rica</p>
+          <p>© 2026 PrecioCR · MVP</p>
         </div>
       </footer>
     </>
