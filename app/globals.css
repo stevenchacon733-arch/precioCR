@@ -232,3 +232,32 @@ footer{border-top:1px solid var(--line);background:white}
   .sellBands{grid-template-columns:1fr}
   .ctaCard{padding:28px}
 }
+
+
+.categorySwitch{
+  display:inline-flex;
+  margin:0 auto 18px;
+  padding:5px;
+  gap:4px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(255,255,255,.82);
+  box-shadow:0 12px 35px rgba(17,56,39,.06);
+}
+.categorySwitch button{
+  border:0;
+  background:transparent;
+  color:#5f6f67;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:800;
+}
+.categorySwitch button.active{
+  background:var(--navy);
+  color:white;
+  box-shadow:0 6px 14px rgba(11,23,18,.16);
+}
+@media(max-width:560px){
+  .categorySwitch{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+  .categorySwitch button{padding:10px 6px;font-size:12px}
+}
