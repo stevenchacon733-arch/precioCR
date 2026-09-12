@@ -795,3 +795,10 @@ footer{border-top:1px solid var(--line);background:white}
   .adminFields .adminWide{grid-column:auto}
   .adminLogin form{grid-template-columns:1fr}
 }
+
+
+/* V5.1 — aviso cuando el año ya está presente */
+.yearRequired.dataWarning{
+  background:linear-gradient(110deg,#fffaf0,#fff);
+  border-color:#eadfbe;
+}
