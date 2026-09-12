@@ -475,7 +475,7 @@ export default function PriceApp() {
                 ? result.stats.validCount > 0
                 : result.stats.count > 0) ? (
                 <>
-                  {result.type === "car" && !result.stats.recommendationReady ? (
+                  {result.type === "car" && result.stats.needsYear ? (
                     <div className="yearRequired">
                       <div>
                         <span className="eyebrow">PARA CALCULAR EL PRECIO JUSTO</span>
@@ -519,6 +519,20 @@ export default function PriceApp() {
                   )}
 
                   <Score stats={result.stats} type={result.type} />
+
+                  {result.type === "car" &&
+                    !result.stats.needsYear &&
+                    !result.stats.recommendationReady ? (
+                      <div className="yearRequired dataWarning">
+                        <div>
+                          <span className="eyebrow">FALTAN DATOS COMPARABLES</span>
+                          <h3>El año ya está correcto.</h3>
+                          <p>
+                            Encontramos muy pocos anuncios válidos de ese modelo y año para calcular un precio recomendado con confianza.
+                          </p>
+                        </div>
+                      </div>
+                    ) : null}
 
                   <div className="filterStack">
                     {result.type === "car" && (
