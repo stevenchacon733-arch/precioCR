@@ -21,16 +21,7 @@ const formatTime = (iso) => {
 
 function Score({ stats }) {
   if (!stats?.score) {
-    const visibleOffers =
-    result?.offers?.filter(
-      (offer) => sourceFilter === "all" || offer.source === sourceFilter
-    ) || [];
-
-  const availableSourceNames = Array.from(
-    new Set(result?.offers?.map((offer) => offer.source) || [])
-  );
-
-  return (
+    return (
       <div className="scoreCard emptyScore">
         <div>
           <span className="eyebrow">PRECIOCR SCORE</span>
@@ -156,6 +147,15 @@ export default function PriceApp() {
     setSourceFilter("all");
   }
 
+  const visibleOffers =
+    result?.offers?.filter(
+      (offer) => sourceFilter === "all" || offer.source === sourceFilter
+    ) || [];
+
+  const availableSourceNames = Array.from(
+    new Set(result?.offers?.map((offer) => offer.source) || [])
+  );
+
   return (
     <>
       <header className="navWrap">
@@ -243,7 +243,7 @@ export default function PriceApp() {
                 <div>
                   <span className="eyebrow">{result.type === "car" ? "AUTO BUSCADO" : "TECNOLOGÍA BUSCADA"}</span>
                   <h2>{result.query}</h2>
-                  <p>{result.stats.count} precios verificables · Consulta: {formatTime(result.fetchedAt)}</p>
+                  <p>{result.stats?.count ?? 0} precios verificables · Consulta: {formatTime(result.fetchedAt)}</p>
                 </div>
                 <div className="updated"><span className="liveDot"></span> Consulta en vivo</div>
               </div>
@@ -268,7 +268,7 @@ export default function PriceApp() {
                 </div>
               )}
 
-              {result.stats.count ? (
+              {(result.stats?.count ?? 0) > 0 ? (
                 <>
                   <div className="metricGrid">
                     <div className="metricCard">
@@ -288,7 +288,7 @@ export default function PriceApp() {
                     </div>
                   </div>
 
-                  <Score stats={result.stats} />
+                  <Score stats={result.stats || {}} />
 
                   <div className="liveLayout">
                     <div className="panel liveOffersPanel">
