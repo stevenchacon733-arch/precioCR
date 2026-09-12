@@ -25,7 +25,7 @@ const formatTime = (iso) => {
 const GROUP_INFO = {
   particular: {
     label: "Mercado particular",
-    description: "Encuentra24 y MercadoLibre",
+    description: "Encuentra24",
   },
   portal: {
     label: "Portales de autos",
@@ -89,27 +89,53 @@ function Score({ stats, type }) {
 }
 
 function SourceStatus({ sources = [] }) {
+  const active = sources.filter((s) => s.count > 0);
+  const reachableNoMatch = sources.filter(
+    (s) =>
+      !s.count &&
+      String(s.error || "").startsWith("Conector OK")
+  );
+  const unavailable = sources.filter(
+    (s) =>
+      !s.count &&
+      !String(s.error || "").startsWith("Conector OK")
+  );
+
   return (
-    <div className="sourceStatus">
-      {sources.map((s) => (
-        <a
-          href={s.url}
-          target="_blank"
-          rel="noreferrer"
-          key={s.source}
-          className={s.count ? "sourcePill ok" : "sourcePill"}
-        >
-          <span className="statusDot" />
-          <b>{s.source}</b>
-          <small>
-            {s.count
-              ? `${s.count} resultado${s.count === 1 ? "" : "s"}`
-              : s.error === "HTTP 403"
-              ? "Bloquea consulta automática"
-              : s.error || "Sin resultados"}
-          </small>
-        </a>
-      ))}
+    <div className="sourceStatusWrap">
+      {active.length > 0 && (
+        <div className="sourceStatus">
+          {active.map((s) => (
+            <a
+              href={s.url}
+              target="_blank"
+              rel="noreferrer"
+              key={s.source}
+              className="sourcePill ok"
+            >
+              <span className="statusDot" />
+              <b>{s.source}</b>
+              <small>
+                {s.count} resultado{s.count === 1 ? "" : "s"}
+              </small>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {reachableNoMatch.length > 0 && (
+        <div className="sourceQuietLine">
+          <span>Consultadas sin coincidencias para esta búsqueda:</span>
+          <b>{reachableNoMatch.map((s) => s.source).join(" · ")}</b>
+        </div>
+      )}
+
+      {unavailable.length > 0 && (
+        <div className="sourceWarningLine">
+          <span>Temporalmente no disponibles:</span>
+          <b>{unavailable.map((s) => s.source).join(" · ")}</b>
+        </div>
+      )}
     </div>
   );
 }
@@ -382,7 +408,7 @@ export default function PriceApp() {
               </h2>
               <p>
                 {type === "car"
-                  ? "Encuentra24, MercadoLibre, CRAutos, AutoCosmos y Purdy Usados. Facebook Marketplace queda como búsqueda externa directa."
+                  ? "Consultamos Encuentra24, CRAutos, AutoCosmos, Purdy, Grupo Q, Kia/Quality Motors y Suzuki/Inchcape. Veinsa se consulta, pero solo entra al cálculo si tiene inventario activo."
                   : "PrecioCR consulta las fuentes automáticas disponibles y conserva el enlace original."}
               </p>
             </div>
