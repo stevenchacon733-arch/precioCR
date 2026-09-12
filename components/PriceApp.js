@@ -70,7 +70,13 @@ function SourceStatus({ sources = [] }) {
         >
           <span className="statusDot" />
           <b>{s.source}</b>
-          <small>{s.count ? `${s.count} resultado${s.count === 1 ? "" : "s"}` : s.error || "Sin resultados"}</small>
+          <small>
+            {s.count
+              ? `${s.count} resultado${s.count === 1 ? "" : "s"}`
+              : s.error === "HTTP 403"
+              ? "Bloquea consulta automática"
+              : s.error || "Sin resultados"}
+          </small>
         </a>
       ))}
     </div>
@@ -224,7 +230,7 @@ export default function PriceApp() {
               <span className="eyebrow">PRECIOCR V3</span>
               <h2>Haz una búsqueda para ver precios reales.</h2>
               <p>
-                Autos consulta Encuentra24 y CRAutos. Tecnología consulta Walmart, Gollo, ExtremeTech, Intelec y Unimart. Marketplace se abre como búsqueda externa porque Facebook requiere inicio de sesión.
+                Autos consulta Encuentra24 y CRAutos. Tecnología consulta automáticamente Walmart, Gollo e Intelec. Marketplace, ExtremeTech y Unimart se abren como búsquedas externas cuando no podemos verificarlos automáticamente.
               </p>
             </div>
           )}
@@ -252,7 +258,7 @@ export default function PriceApp() {
 
               {!!result.externalSources?.length && (
                 <div className="externalSearches">
-                  <span>Buscar también en:</span>
+                  <span>Fuentes externas:</span>
                   {result.externalSources.map((source) => (
                     <a
                       key={source.name}
