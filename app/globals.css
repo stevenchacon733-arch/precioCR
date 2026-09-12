@@ -522,3 +522,40 @@ footer{border-top:1px solid var(--line);background:white}
   font-size:10px;
   font-weight:650;
 }
+
+
+/* ===== PrecioCR V4.3 source status cleanup ===== */
+.sourceStatusWrap{
+  display:grid;
+  gap:9px;
+  margin-bottom:16px;
+}
+.sourceStatusWrap .sourceStatus{
+  margin:0;
+}
+.sourceQuietLine,
+.sourceWarningLine{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:9px 12px;
+  border-radius:12px;
+  font-size:11px;
+  line-height:1.45;
+}
+.sourceQuietLine{
+  background:#f7f9f8;
+  border:1px solid var(--line);
+  color:#718078;
+}
+.sourceWarningLine{
+  background:#fff8f2;
+  border:1px solid #f0dcc9;
+  color:#8a6849;
+}
+.sourceQuietLine b,
+.sourceWarningLine b{
+  color:var(--ink);
+  font-weight:750;
+}
