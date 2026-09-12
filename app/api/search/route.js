@@ -16,7 +16,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
   const requestedType = searchParams.get("type") || "tech";
-  const allowedTypes = new Set(["car", "tech", "supplement"]);
+  const allowedTypes = new Set(["car", "tech", "supplement", "medication"]);
   const type = allowedTypes.has(requestedType) ? requestedType : "tech";
 
   if (q.length < 2) {

@@ -11,7 +11,7 @@ import { isAllowedCatalogOffer } from "@/lib/catalog-safety";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED_CATEGORIES = new Set(["car", "tech", "supplement"]);
+const ALLOWED_CATEGORIES = new Set(["car", "tech", "supplement", "medication"]);
 const ALLOWED_SEGMENTS = new Set(["particular", "portal", "agencia", "retail"]);
 const ALLOWED_STATUS = new Set(["active", "sold", "removed", "expired"]);
 
@@ -100,14 +100,16 @@ function cleanRow(input = {}) {
   }
 
   if (
-    row.category === "supplement" &&
+    (row.category === "supplement" || row.category === "medication") &&
     !isAllowedCatalogOffer(
       [row.title, row.brand, row.model, row.notes].filter(Boolean).join(" "),
       row.category
     )
   ) {
     throw new Error(
-      "Solo se permiten suplementos básicos como proteína, creatina, electrolitos y vitaminas."
+      row.category === "medication"
+        ? "Solo se permiten medicamentos de venta libre (dolor, fiebre, alergias, resfrío, digestivos)."
+        : "Solo se permiten suplementos básicos como proteína, creatina, electrolitos y vitaminas."
     );
   }
 

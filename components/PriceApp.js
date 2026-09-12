@@ -249,6 +249,9 @@ export default function PriceApp() {
     if (type === "tech") {
       return ["iPhone 15 128GB", "PlayStation 5 Slim", "Samsung Galaxy S24"];
     }
+    if (type === "medication") {
+      return ["Acetaminofén 500mg", "Ibuprofeno", "Loratadina"];
+    }
     return ["Creatina monohidratada", "Proteína whey", "Electrolitos"];
   }, [type]);
 
@@ -326,6 +329,7 @@ export default function PriceApp() {
             <button onClick={() => changeType("car")}>Autos</button>
             <button onClick={() => changeType("tech")}>Tecnología</button>
             <button onClick={() => changeType("supplement")}>Suplementos</button>
+            <button onClick={() => changeType("medication")}>Medicamentos</button>
             <a href="#como-funciona">Cómo funciona</a>
           </div>
           <a className="navButton" href="#buscador">Comparar ahora</a>
@@ -345,8 +349,9 @@ export default function PriceApp() {
             </h1>
 
             <p className="heroText">
-              Autos, tecnología y suplementos deportivos básicos, con
-              fuentes visibles y precios comparables.
+              Autos, tecnología, suplementos deportivos básicos y
+              medicamentos de venta libre, con fuentes visibles y precios
+              comparables.
             </p>
 
             <div className="categorySwitch">
@@ -368,6 +373,12 @@ export default function PriceApp() {
               >
                 🥤 Suplementos
               </button>
+              <button
+                className={type === "medication" ? "active" : ""}
+                onClick={() => changeType("medication")}
+              >
+                💊 Medicamentos
+              </button>
             </div>
 
             <div className="searchBox" id="buscador">
@@ -381,6 +392,8 @@ export default function PriceApp() {
                     ? "Ej. Toyota RAV4 2024"
                     : type === "tech"
                     ? "Ej. iPhone 15 128GB"
+                    : type === "medication"
+                    ? "Ej. Acetaminofén 500mg"
                     : "Ej. Creatina monohidratada"
                 }
               />
@@ -410,6 +423,12 @@ export default function PriceApp() {
               </p>
             )}
 
+            {type === "medication" && (
+              <p className="yearTip">
+                Esta sección solo compara medicamentos de venta libre (dolor, fiebre, alergias, resfrío, digestivos). No incluye medicamentos con receta ni controlados, y no sustituye el criterio de un farmacéutico o médico.
+              </p>
+            )}
+
             {error && <div className="errorBox">{error}</div>}
 
             <div className="trustRow">
@@ -429,6 +448,8 @@ export default function PriceApp() {
                   ? "Mercado automotor con varias fuentes."
                   : type === "tech"
                   ? "Compara tecnología en varias tiendas."
+                  : type === "medication"
+                  ? "Compara medicamentos de venta libre."
                   : "Compara suplementos deportivos básicos."}
               </h2>
               <p>
@@ -436,6 +457,8 @@ export default function PriceApp() {
                   ? "Consultamos portales, agencias y Base PrecioCR."
                   : type === "supplement"
                   ? "Walmart, FitMart, Bionatural CR, Fitness Shop CR y Base PrecioCR cuando hay coincidencias verificables."
+                  : type === "medication"
+                  ? "Walmart, MaxiPalí, Farmacia Sucre, Fischel en línea y Base PrecioCR cuando hay coincidencias verificables."
                   : "PrecioCR consulta las fuentes automáticas disponibles y conserva el enlace original."}
               </p>
             </div>
