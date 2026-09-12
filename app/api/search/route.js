@@ -7,7 +7,6 @@ import {
 } from "@/lib/database-listings";
 import { analyzeCarMarket, summarizePrices } from "@/lib/pricing";
 import { parseCarQuery } from "@/lib/car";
-import { validateCatalogQuery } from "@/lib/catalog-safety";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +15,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
   const requestedType = searchParams.get("type") || "tech";
-  const allowedTypes = new Set(["car", "tech", "supplement", "medication"]);
+  const allowedTypes = new Set(["car", "tech"]);
   const type = allowedTypes.has(requestedType) ? requestedType : "tech";
 
   if (q.length < 2) {
@@ -26,13 +25,6 @@ export async function GET(request) {
     );
   }
 
-  const catalogCheck = validateCatalogQuery(q, type);
-  if (!catalogCheck.ok) {
-    return NextResponse.json(
-      { error: catalogCheck.message },
-      { status: 400 }
-    );
-  }
 
   const [automatic, database] = await Promise.all([
     searchSources(q, type),

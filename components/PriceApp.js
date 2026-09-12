@@ -242,18 +242,13 @@ export default function PriceApp() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
 
-  const examples = useMemo(() => {
-    if (type === "car") {
-      return ["Toyota RAV4 2024", "Hyundai Tucson 2024", "Kia Sportage 2023"];
-    }
-    if (type === "tech") {
-      return ["iPhone 15 128GB", "PlayStation 5 Slim", "Samsung Galaxy S24"];
-    }
-    if (type === "medication") {
-      return ["Acetaminofén 500mg", "Ibuprofeno", "Loratadina"];
-    }
-    return ["Creatina monohidratada", "Proteína whey", "Electrolitos"];
-  }, [type]);
+  const examples = useMemo(
+    () =>
+      type === "car"
+        ? ["Toyota RAV4 2024", "Hyundai Tucson 2024", "Kia Sportage 2023"]
+        : ["iPhone 15 128GB", "PlayStation 5 Slim", "Samsung Galaxy S24"],
+    [type]
+  );
 
   async function search(customQuery) {
     const q = (customQuery ?? query).trim();
@@ -328,8 +323,6 @@ export default function PriceApp() {
             <a href="#resultado">Explorar</a>
             <button onClick={() => changeType("car")}>Autos</button>
             <button onClick={() => changeType("tech")}>Tecnología</button>
-            <button onClick={() => changeType("supplement")}>Suplementos</button>
-            <button onClick={() => changeType("medication")}>Medicamentos</button>
             <a href="#como-funciona">Cómo funciona</a>
           </div>
           <a className="navButton" href="#buscador">Comparar ahora</a>
@@ -349,9 +342,8 @@ export default function PriceApp() {
             </h1>
 
             <p className="heroText">
-              Autos, tecnología, suplementos deportivos básicos y
-              medicamentos de venta libre, con fuentes visibles y precios
-              comparables.
+              Compara precios de carros y tecnología en Costa Rica con
+              fuentes visibles, Base PrecioCR y referencias claras.
             </p>
 
             <div className="categorySwitch">
@@ -367,18 +359,6 @@ export default function PriceApp() {
               >
                 📱 Tecnología
               </button>
-              <button
-                className={type === "supplement" ? "active" : ""}
-                onClick={() => changeType("supplement")}
-              >
-                🥤 Suplementos
-              </button>
-              <button
-                className={type === "medication" ? "active" : ""}
-                onClick={() => changeType("medication")}
-              >
-                💊 Medicamentos
-              </button>
             </div>
 
             <div className="searchBox" id="buscador">
@@ -390,11 +370,7 @@ export default function PriceApp() {
                 placeholder={
                   type === "car"
                     ? "Ej. Toyota RAV4 2024"
-                    : type === "tech"
-                    ? "Ej. iPhone 15 128GB"
-                    : type === "medication"
-                    ? "Ej. Acetaminofén 500mg"
-                    : "Ej. Creatina monohidratada"
+                    : "Ej. iPhone 15 128GB"
                 }
               />
               <button onClick={() => search()} disabled={loading}>
@@ -417,17 +393,6 @@ export default function PriceApp() {
               </p>
             )}
 
-            {type === "supplement" && (
-              <p className="yearTip">
-                Esta sección se limita a suplementos básicos como proteína, creatina, electrolitos y vitaminas.
-              </p>
-            )}
-
-            {type === "medication" && (
-              <p className="yearTip">
-                Esta sección solo compara medicamentos de venta libre (dolor, fiebre, alergias, resfrío, digestivos). No incluye medicamentos con receta ni controlados, y no sustituye el criterio de un farmacéutico o médico.
-              </p>
-            )}
 
             {error && <div className="errorBox">{error}</div>}
 
@@ -442,24 +407,16 @@ export default function PriceApp() {
         <section className="section shell" id="resultado">
           {!result && !loading && (
             <div className="preSearch">
-              <span className="eyebrow">PRECIOCR V6.1</span>
+              <span className="eyebrow">PRECIOCR V8</span>
               <h2>
                 {type === "car"
                   ? "Mercado automotor con varias fuentes."
-                  : type === "tech"
-                  ? "Compara tecnología en varias tiendas."
-                  : type === "medication"
-                  ? "Compara medicamentos de venta libre."
-                  : "Compara suplementos deportivos básicos."}
+                  : "Compara tecnología en varias tiendas."}
               </h2>
               <p>
                 {type === "car"
                   ? "Consultamos portales, agencias y Base PrecioCR."
-                  : type === "supplement"
-                  ? "Walmart, FitMart, Bionatural CR, Fitness Shop CR y Base PrecioCR cuando hay coincidencias verificables."
-                  : type === "medication"
-                  ? "Walmart, MaxiPalí, Farmacia Sucre, Fischel en línea y Base PrecioCR cuando hay coincidencias verificables."
-                  : "PrecioCR consulta las fuentes automáticas disponibles y conserva el enlace original."}
+                  : "PrecioCR consulta las fuentes tecnológicas disponibles y conserva el enlace original."}
               </p>
             </div>
           )}
@@ -481,9 +438,7 @@ export default function PriceApp() {
                   <span className="eyebrow">
                     {result.type === "car"
                       ? "ANÁLISIS DE MERCADO AUTOMOTOR"
-                      : result.type === "tech"
-                      ? "TECNOLOGÍA BUSCADA"
-                      : "SUPLEMENTO COMPARADO"}
+                      : "TECNOLOGÍA BUSCADA"}
                   </span>
                   <h2>{result.query}</h2>
                   <p>
@@ -689,7 +644,7 @@ export default function PriceApp() {
                         <h3>Siempre puedes verificar.</h3>
                         <p>
                           Cada resultado conserva su fuente y la Base PrecioCR se identifica por separado.
-                          Las categorías de suplementos y bienestar aplican filtros adicionales para mantener comparaciones apropiadas.
+                          En autos y tecnología solo comparamos resultados compatibles con la búsqueda.
                         </p>
                       </div>
                     </div>
@@ -702,9 +657,7 @@ export default function PriceApp() {
                   <p>
                     {result.type === "car"
                       ? "Prueba con marca + modelo + año, por ejemplo: Toyota RAV4 2024."
-                      : result.type === "tech"
-                      ? "Prueba con marca + modelo + capacidad."
-                      : "Prueba con una categoría básica, por ejemplo creatina monohidratada o proteína whey."}
+                      : "Prueba con marca + modelo + capacidad."}
                   </p>
                   <ExternalSources sources={result.externalSources} />
                 </div>
@@ -716,10 +669,10 @@ export default function PriceApp() {
         <section className="darkSection" id="como-funciona">
           <div className="shell">
             <div className="centerHead">
-              <span className="eyebrow light">PRECIOCR V6.1</span>
-              <h2>Autos, tecnología y suplementos en una sola plataforma.</h2>
+              <span className="eyebrow light">PRECIOCR V8</span>
+              <h2>Autos y tecnología en una sola plataforma.</h2>
               <p>
-                Cada sección aplica reglas distintas para mantener comparaciones compatibles y fuentes transparentes.
+                PrecioCR combina fuentes automáticas con Base PrecioCR para darte referencias más claras.
               </p>
             </div>
 
@@ -750,8 +703,8 @@ export default function PriceApp() {
             <span className="brandMark">₡</span>
             <span>Precio<span>CR</span></span>
           </div>
-          <p>Autos + Tecnología + Suplementos · Costa Rica</p>
-          <p>© 2026 PrecioCR · V6.1 beta</p>
+          <p>Autos + Tecnología · Costa Rica</p>
+          <p>© 2026 PrecioCR · V8 beta</p>
         </div>
       </footer>
     </>
