@@ -403,6 +403,7 @@ export default function AdminPanel() {
                 >
                   <option value="car">Carro</option>
                   <option value="tech">Tecnología</option>
+                  <option value="supplement">Suplemento</option>
                 </select>
               </label>
 

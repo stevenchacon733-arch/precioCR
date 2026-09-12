@@ -6,11 +6,12 @@ import {
   listRecentListings,
   updateListing,
 } from "@/lib/db";
+import { isAllowedCatalogOffer } from "@/lib/catalog-safety";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED_CATEGORIES = new Set(["car", "tech"]);
+const ALLOWED_CATEGORIES = new Set(["car", "tech", "supplement"]);
 const ALLOWED_SEGMENTS = new Set(["particular", "portal", "agencia", "retail"]);
 const ALLOWED_STATUS = new Set(["active", "sold", "removed", "expired"]);
 
@@ -96,6 +97,18 @@ function cleanRow(input = {}) {
     row.title = [row.brand, row.model, row.year]
       .filter(Boolean)
       .join(" ");
+  }
+
+  if (
+    row.category === "supplement" &&
+    !isAllowedCatalogOffer(
+      [row.title, row.brand, row.model, row.notes].filter(Boolean).join(" "),
+      row.category
+    )
+  ) {
+    throw new Error(
+      "Solo se permiten suplementos básicos como proteína, creatina, electrolitos y vitaminas."
+    );
   }
 
   if (!row.source) throw new Error("Falta source.");

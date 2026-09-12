@@ -7,7 +7,7 @@ create table if not exists public.listings (
   id uuid primary key default gen_random_uuid(),
 
   source text not null,
-  category text not null check (category in ('car', 'tech')),
+  category text not null check (category in ('car', 'tech', 'supplement')),
   market_segment text not null default 'particular'
     check (market_segment in ('particular', 'portal', 'agencia', 'retail')),
 
