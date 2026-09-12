@@ -339,3 +339,31 @@ footer{border-top:1px solid var(--line);background:white}
   .sourcePill{width:100%;border-radius:14px}
   .sourcePill small{margin-left:auto}
 }
+
+
+/* ===== PrecioCR V3.2 multifuente ===== */
+.externalSearches{
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 20px;
+  color:var(--muted);font-size:12px
+}
+.marketplaceButton{
+  display:flex;align-items:center;gap:9px;border:1px solid #cfd7ff;
+  background:#f5f7ff;color:#182b70;border-radius:14px;padding:10px 13px;
+  font-weight:800
+}
+.marketplaceButton small{
+  font-weight:600;color:#66729a
+}
+.sourceFilters{
+  display:flex;gap:7px;flex-wrap:wrap;margin:-2px 0 16px
+}
+.sourceFilters button{
+  border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:8px 11px;color:#5e6d66;font-size:11px;font-weight:800
+}
+.sourceFilters button.active{
+  background:var(--navy);border-color:var(--navy);color:#fff
+}
+@media(max-width:560px){
+  .marketplaceButton{width:100%;justify-content:space-between}
+}
