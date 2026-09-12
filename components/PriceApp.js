@@ -197,6 +197,11 @@ function OfferCard({ offer, i, type }) {
           {type === "car" && offer.quality != null && (
             <span className="qualityTag">{offer.quality}% match</span>
           )}
+          {offer.dataOrigin === "database" && (
+            <span className="databaseTag">
+              {offer.verified ? "Base PrecioCR ✓" : "Base PrecioCR"}
+            </span>
+          )}
         </div>
         <strong>{offer.title}</strong>
         <span>
@@ -211,6 +216,7 @@ function OfferCard({ offer, i, type }) {
                 .filter(Boolean)
                 .join(" · ")
             : [offer.condition, offer.meta].filter(Boolean).join(" · ")}
+          {offer.observedAt ? ` · observado ${offer.observedAt}` : ""}
         </span>
       </div>
       <div className="offerPrice livePrice">
@@ -449,6 +455,11 @@ export default function PriceApp() {
               </div>
 
               <SourceStatus sources={result.sources} />
+              {result.database?.configured && result.database.count > 0 ? (
+                <div className="databaseNotice">
+                  <b>Base PrecioCR:</b> {result.database.count} dato{result.database.count === 1 ? "" : "s"} manual{result.database.count === 1 ? "" : "es"} incluido{result.database.count === 1 ? "" : "s"} en este análisis.
+                </div>
+              ) : null}
               {result.type === "car" && result.fx?.usdToCrc ? (
                 <div className="fxNote">
                   Precios publicados en dólares se convierten a colones con una referencia de{" "}
