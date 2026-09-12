@@ -501,3 +501,24 @@ footer{border-top:1px solid var(--line);background:white}
   }
   .yearRequired button{width:100%}
 }
+
+
+/* ===== PrecioCR V4.1 agencias ===== */
+.fxNote{
+  margin:-7px 0 17px;
+  padding:10px 13px;
+  border:1px solid var(--line);
+  background:#fbfcfb;
+  border-radius:13px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.5;
+}
+.fxNote b{color:var(--ink)}
+.livePrice small{
+  display:block;
+  margin-top:3px;
+  color:#78867f;
+  font-size:10px;
+  font-weight:650;
+}
