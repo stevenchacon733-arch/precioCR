@@ -88,7 +88,7 @@ function OfferCard({ offer, i }) {
       </div>
       <div className="offerPrice livePrice">
         <strong>{money(offer.price)}</strong>
-        <span>Ver fuente ↗</span>
+        <span>Ver en fuente ↗</span>
       </div>
     </a>
   );
