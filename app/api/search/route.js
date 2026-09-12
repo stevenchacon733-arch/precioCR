@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchSources } from "@/lib/sources";
-import { summarizePrices } from "@/lib/pricing";
+import { analyzeCarMarket, summarizePrices } from "@/lib/pricing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,18 +17,36 @@ export async function GET(request) {
     );
   }
 
-  const { offers, sources, externalSources } = await searchSources(q, type);
-  const stats = summarizePrices(offers);
+  const result = await searchSources(q, type);
+
+  if (type === "car") {
+    const stats = analyzeCarMarket(result.offers, result.spec);
+
+    return NextResponse.json({
+      query: q,
+      type,
+      fetchedAt: new Date().toISOString(),
+      spec: result.spec,
+      offers: result.offers,
+      sources: result.sources,
+      externalSources: result.externalSources,
+      stats,
+      note:
+        "Para autos, PrecioCR balancea las fuentes para que un portal con muchos anuncios no domine el promedio. Marketplace se abre como fuente externa y no entra al cálculo automático.",
+    });
+  }
+
+  const stats = summarizePrices(result.offers);
 
   return NextResponse.json({
     query: q,
     type,
     fetchedAt: new Date().toISOString(),
-    offers,
-    sources,
-    externalSources,
+    offers: result.offers,
+    sources: result.sources,
+    externalSources: result.externalSources,
     stats,
     note:
-      "PrecioCR solo calcula recomendaciones cuando encuentra precios verificables. Las fuentes pueden cambiar su estructura o limitar consultas automáticas.",
+      "PrecioCR calcula referencias solo con precios que logra verificar automáticamente.",
   });
 }
