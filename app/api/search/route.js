@@ -30,6 +30,7 @@ export async function GET(request) {
       offers: result.offers,
       sources: result.sources,
       externalSources: result.externalSources,
+      fx: result.fx || null,
       stats,
       note:
         "Para autos, PrecioCR balancea las fuentes para que un portal con muchos anuncios no domine el promedio. Marketplace se abre como fuente externa y no entra al cálculo automático.",
