@@ -17,7 +17,7 @@ export async function GET(request) {
     );
   }
 
-  const { offers, sources } = await searchSources(q, type);
+  const { offers, sources, externalSources } = await searchSources(q, type);
   const stats = summarizePrices(offers);
 
   return NextResponse.json({
@@ -26,6 +26,7 @@ export async function GET(request) {
     fetchedAt: new Date().toISOString(),
     offers,
     sources,
+    externalSources,
     stats,
     note:
       "PrecioCR solo calcula recomendaciones cuando encuentra precios verificables. Las fuentes pueden cambiar su estructura o limitar consultas automáticas.",
