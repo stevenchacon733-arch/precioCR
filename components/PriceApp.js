@@ -21,7 +21,16 @@ const formatTime = (iso) => {
 
 function Score({ stats }) {
   if (!stats?.score) {
-    return (
+    const visibleOffers =
+    result?.offers?.filter(
+      (offer) => sourceFilter === "all" || offer.source === sourceFilter
+    ) || [];
+
+  const availableSourceNames = Array.from(
+    new Set(result?.offers?.map((offer) => offer.source) || [])
+  );
+
+  return (
       <div className="scoreCard emptyScore">
         <div>
           <span className="eyebrow">PRECIOCR SCORE</span>
@@ -100,6 +109,7 @@ export default function PriceApp() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("all");
 
   const examples = useMemo(
     () =>
@@ -117,6 +127,7 @@ export default function PriceApp() {
     setLoading(true);
     setError("");
     setResult(null);
+    setSourceFilter("all");
 
     try {
       const res = await fetch(
@@ -142,6 +153,7 @@ export default function PriceApp() {
     setQuery("");
     setResult(null);
     setError("");
+    setSourceFilter("all");
   }
 
   return (
@@ -212,7 +224,7 @@ export default function PriceApp() {
               <span className="eyebrow">PRECIOCR V3</span>
               <h2>Haz una búsqueda para ver precios reales.</h2>
               <p>
-                Autos consulta inicialmente Encuentra24 y coincidencias visibles en CRAutos. Tecnología intenta consultar Walmart Costa Rica y Gollo.
+                Autos consulta Encuentra24 y CRAutos. Tecnología consulta Walmart, Gollo, ExtremeTech, Intelec y Unimart. Marketplace se abre como búsqueda externa porque Facebook requiere inicio de sesión.
               </p>
             </div>
           )}
@@ -237,6 +249,24 @@ export default function PriceApp() {
               </div>
 
               <SourceStatus sources={result.sources} />
+
+              {!!result.externalSources?.length && (
+                <div className="externalSearches">
+                  <span>Buscar también en:</span>
+                  {result.externalSources.map((source) => (
+                    <a
+                      key={source.name}
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="marketplaceButton"
+                    >
+                      {source.name} ↗
+                      <small>{source.note}</small>
+                    </a>
+                  ))}
+                </div>
+              )}
 
               {result.stats.count ? (
                 <>
@@ -270,8 +300,29 @@ export default function PriceApp() {
                         <span className="count">{result.offers.length} encontrados</span>
                       </div>
 
+                      <div className="sourceFilters">
+                        <button
+                          className={sourceFilter === "all" ? "active" : ""}
+                          onClick={() => setSourceFilter("all")}
+                        >
+                          Todas ({result.offers.length})
+                        </button>
+                        {availableSourceNames.map((name) => {
+                          const count = result.offers.filter((x) => x.source === name).length;
+                          return (
+                            <button
+                              key={name}
+                              className={sourceFilter === name ? "active" : ""}
+                              onClick={() => setSourceFilter(name)}
+                            >
+                              {name} ({count})
+                            </button>
+                          );
+                        })}
+                      </div>
+
                       <div className="liveOffers">
-                        {result.offers.map((offer, i) => (
+                        {visibleOffers.map((offer, i) => (
                           <OfferCard key={`${offer.source}-${offer.url}-${i}`} offer={offer} i={i} />
                         ))}
                       </div>
@@ -293,7 +344,7 @@ export default function PriceApp() {
                         <span className="eyebrow">TRANSPARENCIA</span>
                         <h3>No ocultamos la fuente.</h3>
                         <p>
-                          Cada precio enlaza directamente a la página donde fue detectado. Si una fuente bloquea o cambia su sitio, lo mostramos como no disponible.
+                          Cada precio enlaza a su fuente. Marketplace se mantiene como búsqueda externa porque Facebook puede exigir inicio de sesión y no lo usamos para calcular el promedio hasta poder verificar sus anuncios de forma estable.
                         </p>
                       </div>
                     </div>
