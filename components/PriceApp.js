@@ -33,7 +33,7 @@ const GROUP_INFO = {
   },
   agencia: {
     label: "Agencias / seminuevos",
-    description: "Purdy Usados",
+    description: "Purdy, Grupo Q, Kia/Quality Motors, Suzuki/Inchcape y Veinsa",
   },
 };
 
@@ -189,6 +189,12 @@ function OfferCard({ offer, i, type }) {
       </div>
       <div className="offerPrice livePrice">
         <strong>{money(offer.price)}</strong>
+        {offer.originalCurrency === "USD" && offer.originalPrice ? (
+          <small>
+            ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(offer.originalPrice)}
+            {" "}original
+          </small>
+        ) : null}
         <span>Ver fuente ↗</span>
       </div>
     </a>
@@ -417,6 +423,13 @@ export default function PriceApp() {
               </div>
 
               <SourceStatus sources={result.sources} />
+              {result.type === "car" && result.fx?.usdToCrc ? (
+                <div className="fxNote">
+                  Precios publicados en dólares se convierten a colones con una referencia de{" "}
+                  <b>₡{new Intl.NumberFormat("es-CR", { maximumFractionDigits: 2 }).format(result.fx.usdToCrc)} por USD</b>
+                  {" "}({result.fx.source}).
+                </div>
+              ) : null}
               <ExternalSources sources={result.externalSources} />
 
               {result.type === "car" && <CarMarketBreakdown stats={result.stats} />}
