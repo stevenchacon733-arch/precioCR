@@ -68,6 +68,7 @@ export async function GET(request) {
       fetchedAt: new Date().toISOString(),
       spec,
       offers,
+      alternatives: automatic.alternatives || [],
       sources,
       locationFilter,
       externalSources: automatic.externalSources || [],

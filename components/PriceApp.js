@@ -126,8 +126,9 @@ function SourceStatus({ sources = [] }) {
 
       {reachableNoMatch.length > 0 && (
         <div className="sourceQuietLine">
-          <span>Consultadas sin coincidencias para esta búsqueda:</span>
+          <span>Consultadas sin coincidencias en la ubicación seleccionada:</span>
           <b>{reachableNoMatch.map((s) => s.source).join(" · ")}</b>
+          <small>{reachableNoMatch.map((s) => s.error?.replace("Conector OK · ", "")).join(" · ")}</small>
         </div>
       )}
 
@@ -184,6 +185,30 @@ function CarMarketBreakdown({ stats }) {
           </small>
         </div>
       ))}
+    </div>
+  );
+}
+
+function YearAlternatives({ offers = [], requestedYear }) {
+  if (!offers.length) return null;
+
+  return (
+    <div className="yearAlternatives" role="status">
+      <div>
+        <span className="eyebrow">OTROS AÑOS DISPONIBLES</span>
+        <h3>No mezclamos estos datos en el precio recomendado.</h3>
+        <p>
+          Sí encontramos anuncios parecidos, pero son de años distintos a {requestedYear}.
+        </p>
+      </div>
+      <div className="yearAlternativeList">
+        {offers.slice(0, 6).map((offer, index) => (
+          <a key={`${offer.source}-${offer.url}-${index}`} href={offer.url} target="_blank" rel="noreferrer">
+            <strong>{offer.title}</strong>
+            <span>{offer.year} · {money(offer.price)} · {offer.source}</span>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
@@ -711,6 +736,9 @@ export default function PriceApp() {
               <ExternalSources sources={result.externalSources} province={locationFilter?.province} />
 
               {result.type === "car" && <CarMarketBreakdown stats={result.stats} />}
+              {result.type === "car" && result.spec?.year && (
+                <YearAlternatives offers={result.alternatives} requestedYear={result.spec.year} />
+              )}
 
               {(result.type === "car"
                 ? result.stats.validCount > 0
