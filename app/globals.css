@@ -816,3 +816,61 @@ footer{border-top:1px solid var(--line);background:white}
     width:100%;
   }
 }
+
+/* Optional vehicle location and technology store branches */
+.locationSearchFilter{
+  width:min(860px,100%);margin:16px auto 0;padding:15px 18px;
+  display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;text-align:left;
+  border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.8);
+}
+.locationToggle{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:750;cursor:pointer}
+.locationToggle input{width:18px;height:18px;margin:0;accent-color:var(--green);flex-shrink:0}
+.locationToggle small{font-weight:500;color:var(--muted)}
+.locationProvinceField{display:flex;align-items:center;gap:9px;margin-left:auto;font-size:12px}
+.locationProvinceField label{font-weight:700;color:#516159}
+.locationProvinceField select{
+  min-width:180px;max-width:100%;font:inherit;color:var(--ink);background:white;
+  border:1px solid #cbd8d0;border-radius:10px;padding:9px 12px;
+}
+.locationSearchFilter>p{flex-basis:100%;margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
+.locationResultNotice{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin:0 0 18px;padding:16px 18px;border-radius:16px;border:1px solid #cfe8dc;
+  background:#f0faf5;font-size:13px;color:#315d49;
+}
+.locationResultNotice p{margin:5px 0 0;font-size:12px;line-height:1.5}
+.externalLocationNote{flex-basis:100%;margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
+.locationResultNotice button,.offerFilterEmpty button{
+  flex-shrink:0;border:1px solid #b8d4c6;background:white;color:#136447;
+  padding:10px 12px;border-radius:10px;font-size:12px;font-weight:750;
+}
+.locationResultNotice button:hover,.offerFilterEmpty button:hover{background:#e8f6ef}
+.offerInfo{min-width:0;overflow-wrap:anywhere}
+.offerTitleLink:hover{color:var(--green-dark)}
+.offerSourceLink{display:inline-block;margin-top:6px;color:var(--green-dark);font-size:12px;font-weight:800}
+.storeLocations{grid-column:2/-1;min-width:0;border-top:1px solid var(--line);padding-top:12px;text-align:left}
+.storeLocations summary{color:#315d49;font-size:12px;font-weight:750;cursor:pointer;line-height:1.5}
+.storeLocationList{list-style:none;display:grid;gap:10px;padding:0;margin:12px 0}
+.storeLocationList li{border-left:2px solid #dcebe3;padding-left:10px;overflow-wrap:anywhere}
+.storeLocationList strong{display:block;font-size:12px;line-height:1.45}
+.storeLocationList span,.storeLocationList small{display:block;color:var(--muted);font-size:11px;line-height:1.5;margin-top:3px}
+.storeLocationList .branchAvailable{color:var(--green-dark);font-weight:700}
+.storeLocatorLink{display:inline-block;color:var(--green-dark);font-weight:750;font-size:12px;line-height:1.5}
+.storeLocations details+.storeLocatorLink{margin-top:9px}
+.storeLocatorLink:hover,.storeLocationList a:hover,.offerSourceLink:hover{text-decoration:underline;text-underline-offset:3px}
+.storeLocations p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+.offerFilterEmpty{padding:18px;background:#f7faf8;border-radius:12px;color:var(--muted);font-size:13px;line-height:1.5}
+.offerFilterEmpty p{margin:0 0 10px}
+.locationSearchFilter input:focus-visible,.locationSearchFilter select:focus-visible,
+.locationResultNotice button:focus-visible,.offerFilterEmpty button:focus-visible,
+.liveOffer a:focus-visible,.storeLocations summary:focus-visible{
+  outline:3px solid #489d7b;outline-offset:4px;border-radius:4px;
+}
+@media(max-width:560px){
+  .locationSearchFilter{padding:13px}
+  .locationProvinceField{width:100%;margin-left:0;flex-wrap:wrap}
+  .locationProvinceField select{flex:1;min-width:0}
+  .locationResultNotice{align-items:flex-start;flex-direction:column}
+  .locationResultNotice button{width:100%}
+  .storeLocations{grid-column:1/-1}
+}

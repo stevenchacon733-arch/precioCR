@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { COSTA_RICA_PROVINCES } from "@/lib/location";
 
 const money = (value) =>
   value == null
@@ -140,7 +141,7 @@ function SourceStatus({ sources = [] }) {
   );
 }
 
-function ExternalSources({ sources = [] }) {
+function ExternalSources({ sources = [], province }) {
   if (!sources.length) return null;
 
   return (
@@ -158,6 +159,11 @@ function ExternalSources({ sources = [] }) {
           <small>{source.note}</small>
         </a>
       ))}
+      {province && (
+        <p className="externalLocationNote">
+          En las páginas externas, selecciona también {province} para buscar en la misma ubicación.
+        </p>
+      )}
     </div>
   );
 }
@@ -182,9 +188,59 @@ function CarMarketBreakdown({ stats }) {
   );
 }
 
+function StoreLocations({ offer }) {
+  const locations = (offer.storeLocations || []).filter((location) => location?.name);
+
+  return (
+    <div className="storeLocations">
+      {locations.length > 0 && (
+        <details>
+          <summary>
+            {offer.storeLocationsScope === "retailer" ? "Locales de la cadena" : "Ubicaciones del producto"}
+            {" · "}{offer.source} ({locations.length})
+          </summary>
+          <ul className="storeLocationList">
+            {locations.map((location, index) => (
+              <li key={`${location.name}-${index}`}>
+                <strong>
+                  {location.url ? (
+                    <a href={location.url} target="_blank" rel="noreferrer">
+                      {location.name} ↗
+                    </a>
+                  ) : location.name}
+                </strong>
+                {(location.address || location.province) && (
+                  <span>{[location.address, location.province].filter(Boolean).join(" · ")}</span>
+                )}
+                <small className={location.availability === "available" ? "branchAvailable" : ""}>
+                  {location.availability === "available"
+                    ? "Producto disponible en este local"
+                    : location.availability === "unavailable"
+                    ? "Producto no disponible en este local"
+                    : "Consultar disponibilidad del producto"}
+                </small>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {offer.storeLocationsUrl && (
+        <a className="storeLocatorLink" href={offer.storeLocationsUrl} target="_blank" rel="noreferrer">
+          Ver locales de {offer.source} ↗
+        </a>
+      )}
+      <p>
+        {offer.locationNote || (locations.length || offer.storeLocationsUrl
+          ? "Consulta en la tienda la disponibilidad del producto en cada local."
+          : "La fuente no indica ubicaciones de locales.")}
+      </p>
+    </div>
+  );
+}
+
 function OfferCard({ offer, i, type }) {
   return (
-    <a className="liveOffer" href={offer.url} target="_blank" rel="noreferrer">
+    <article className="liveOffer">
       <div className="offerRank">{String(i + 1).padStart(2, "0")}</div>
       <div className="offerInfo">
         <div className="offerMetaTop">
@@ -203,7 +259,9 @@ function OfferCard({ offer, i, type }) {
             </span>
           )}
         </div>
-        <strong>{offer.title}</strong>
+        <a className="offerTitleLink" href={offer.url} target="_blank" rel="noreferrer">
+          <strong>{offer.title}</strong>
+        </a>
         <span>
           {type === "car"
             ? [
@@ -211,7 +269,7 @@ function OfferCard({ offer, i, type }) {
                 offer.km != null ? `${number(offer.km)} km` : null,
                 offer.transmission,
                 offer.fuel,
-                offer.province,
+                offer.province || "Ubicación no indicada",
               ]
                 .filter(Boolean)
                 .join(" · ")
@@ -227,9 +285,12 @@ function OfferCard({ offer, i, type }) {
             {" "}original
           </small>
         ) : null}
-        <span>Ver fuente ↗</span>
+        <a className="offerSourceLink" href={offer.url} target="_blank" rel="noreferrer">
+          Ver fuente ↗
+        </a>
       </div>
-    </a>
+      {type === "tech" && <StoreLocations offer={offer} />}
+    </article>
   );
 }
 
@@ -241,6 +302,16 @@ export default function PriceApp() {
   const [error, setError] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [province, setProvince] = useState("");
+  const searchRequest = useRef(null);
+  const requestedQuery = useRef("");
+  const requestVersion = useRef(0);
+
+  useEffect(() => () => {
+    requestVersion.current += 1;
+    searchRequest.current?.abort();
+  }, []);
 
   const examples = useMemo(
     () =>
@@ -250,9 +321,18 @@ export default function PriceApp() {
     [type]
   );
 
-  async function search(customQuery) {
+  async function search(customQuery, options = {}) {
     const q = (customQuery ?? query).trim();
-    if (q.length < 2 || loading) return;
+    if (q.length < 2) return;
+
+    searchRequest.current?.abort();
+    const controller = new AbortController();
+    searchRequest.current = controller;
+    requestedQuery.current = q;
+    const version = ++requestVersion.current;
+    const selectedProvince = options.province ?? (locationEnabled ? province : "");
+    const params = new URLSearchParams({ q, type });
+    if (type === "car" && selectedProvince) params.set("province", selectedProvince);
 
     setQuery(q);
     setLoading(true);
@@ -263,8 +343,8 @@ export default function PriceApp() {
 
     try {
       const res = await fetch(
-        `/api/search?q=${encodeURIComponent(q)}&type=${type}`,
-        { cache: "no-store" }
+        `/api/search?${params}`,
+        { cache: "no-store", signal: controller.signal }
       );
       const data = await res.json();
 
@@ -272,28 +352,45 @@ export default function PriceApp() {
         throw new Error(data.error || "No se pudo completar la búsqueda.");
       }
 
+      if (version !== requestVersion.current) return;
       setResult(data);
       setTimeout(
-        () =>
+        () => version === requestVersion.current &&
           document
             .getElementById("resultado")
             ?.scrollIntoView({ behavior: "smooth" }),
         60
       );
     } catch (e) {
-      setError(e.message || "No se pudo completar la búsqueda.");
+      if (version === requestVersion.current && e.name !== "AbortError") {
+        setError(e.message || "No se pudo completar la búsqueda.");
+      }
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }
 
   function changeType(next) {
+    searchRequest.current?.abort();
+    requestVersion.current += 1;
+    requestedQuery.current = "";
+    setLoading(false);
     setType(next);
     setQuery("");
     setResult(null);
     setError("");
     setSourceFilter("all");
     setGroupFilter("all");
+  }
+
+  function changeLocation(enabled, nextProvince) {
+    const previousProvince = locationEnabled ? province : "";
+    const selectedProvince = enabled ? nextProvince : "";
+    setLocationEnabled(enabled);
+    setProvince(nextProvince);
+    if (previousProvince !== selectedProvince && (result || loading)) {
+      search(result?.query || requestedQuery.current || query, { province: selectedProvince });
+    }
   }
 
   const availableSourceNames = Array.from(
@@ -309,7 +406,7 @@ export default function PriceApp() {
       return sourceOk && groupOk;
     }) || [];
 
-  const carStats = result?.type === "car" ? result?.stats : null;
+  const locationFilter = result?.type === "car" ? result.locationFilter : null;
 
   return (
     <>
@@ -364,6 +461,7 @@ export default function PriceApp() {
             <div className="searchBox" id="buscador">
               <span className="searchIcon">⌕</span>
               <input
+                aria-label={type === "car" ? "Buscar vehículo" : "Buscar producto de tecnología"}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && search()}
@@ -377,6 +475,42 @@ export default function PriceApp() {
                 {loading ? "Comparando..." : "Buscar precio"}
               </button>
             </div>
+
+            {type === "car" && (
+              <div className="locationSearchFilter">
+                <label className="locationToggle" htmlFor="filter-location">
+                  <input
+                    id="filter-location"
+                    type="checkbox"
+                    checked={locationEnabled}
+                    onChange={(e) => changeLocation(e.target.checked, e.target.checked ? province : "")}
+                    aria-controls={locationEnabled ? "location-province-field" : undefined}
+                    aria-describedby="location-filter-help"
+                  />
+                  <span>Filtrar ubicación <small>(opcional)</small></span>
+                </label>
+                {locationEnabled && (
+                  <div className="locationProvinceField" id="location-province-field">
+                    <label htmlFor="filter-province">Provincia</label>
+                    <select
+                      id="filter-province"
+                      value={province}
+                      onChange={(e) => changeLocation(true, e.target.value)}
+                    >
+                      <option value="">Todo Costa Rica</option>
+                      {COSTA_RICA_PROVINCES.map((name) => (
+                        <option value={name} key={name}>{name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <p id="location-filter-help">
+                  {locationEnabled && province
+                    ? "Solo anuncios con ubicación identificada en esta provincia."
+                    : "Sin filtro, buscamos en todo Costa Rica, incluso anuncios sin ubicación indicada."}
+                </p>
+              </div>
+            )}
 
             <div className="exampleRow">
               <span>Prueba:</span>
@@ -394,7 +528,7 @@ export default function PriceApp() {
             )}
 
 
-            {error && <div className="errorBox">{error}</div>}
+            {error && <div className="errorBox" role="alert">{error}</div>}
 
             <div className="trustRow">
               <span>✓ Fuentes visibles</span>
@@ -422,7 +556,7 @@ export default function PriceApp() {
           )}
 
           {loading && (
-            <div className="loadingState">
+            <div className="loadingState" role="status">
               <div className="loader" />
               <h2>Comparando precios…</h2>
               <p>
@@ -455,6 +589,21 @@ export default function PriceApp() {
                 </div>
               </div>
 
+              {locationFilter?.province && (
+                <div className="locationResultNotice" role="status">
+                  <div>
+                    <b>Ubicación: {locationFilter.province}</b>
+                    <p>
+                      {locationFilter.matchedCount} de {locationFilter.totalCount} anuncios coinciden con esta provincia.
+                      {locationFilter.unknownCount > 0 && (
+                        <> {locationFilter.unknownCount} sin ubicación identificada quedan fuera del filtro.</>
+                      )}
+                    </p>
+                  </div>
+                  <button onClick={() => changeLocation(false, "")}>Quitar filtro de ubicación</button>
+                </div>
+              )}
+
               <SourceStatus sources={result.sources} />
               {result.database?.configured && result.database.count > 0 ? (
                 <div className="databaseNotice">
@@ -468,7 +617,7 @@ export default function PriceApp() {
                   {" "}({result.fx.source}).
                 </div>
               ) : null}
-              <ExternalSources sources={result.externalSources} />
+              <ExternalSources sources={result.externalSources} province={locationFilter?.province} />
 
               {result.type === "car" && <CarMarketBreakdown stats={result.stats} />}
 
@@ -600,6 +749,14 @@ export default function PriceApp() {
                       </div>
 
                       <div className="liveOffers">
+                        {visibleOffers.length === 0 && (
+                          <div className="offerFilterEmpty" role="status">
+                            <p>No hay ofertas con esta combinación de fuente y mercado.</p>
+                            <button onClick={() => { setSourceFilter("all"); setGroupFilter("all"); }}>
+                              Mostrar todas las ofertas
+                            </button>
+                          </div>
+                        )}
                         {visibleOffers.map((offer, i) => (
                           <OfferCard
                             key={`${offer.source}-${offer.url}-${offer.price}-${i}`}
@@ -653,13 +810,19 @@ export default function PriceApp() {
               ) : (
                 <div className="noData">
                   <span className="noDataIcon">⌕</span>
-                  <h3>No encontramos suficientes resultados confiables.</h3>
+                  <h3>
+                    {locationFilter?.province
+                      ? `No encontramos resultados confiables en ${locationFilter.province}.`
+                      : "No encontramos suficientes resultados confiables."}
+                  </h3>
                   <p>
-                    {result.type === "car"
+                    {locationFilter?.province
+                      ? "Puedes elegir otra provincia o quitar el filtro de ubicación para ampliar la búsqueda."
+                      : result.type === "car"
                       ? "Prueba con marca + modelo + año, por ejemplo: Toyota RAV4 2024."
                       : "Prueba con marca + modelo + capacidad."}
                   </p>
-                  <ExternalSources sources={result.externalSources} />
+                  <ExternalSources sources={result.externalSources} province={locationFilter?.province} />
                 </div>
               )}
             </>

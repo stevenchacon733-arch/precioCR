@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { COSTA_RICA_PROVINCES } from "@/lib/location";
 
 const emptyListing = {
   source: "Facebook Marketplace",
@@ -18,6 +19,7 @@ const emptyListing = {
   fuel: "",
   condition: "Usado",
   province: "",
+  store_locations_text: "",
   url: "",
   verified: true,
   status: "active",
@@ -100,7 +102,7 @@ function parseCsv(text) {
 }
 
 function csvEscape(value) {
-  const text = String(value ?? "");
+  const text = Array.isArray(value) ? JSON.stringify(value) : String(value ?? "");
   if (/[",;\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
   return text;
 }
@@ -122,6 +124,7 @@ function downloadCsv(listings) {
     "fuel",
     "condition",
     "province",
+    "store_locations",
     "url",
     "verified",
     "status",
@@ -146,6 +149,17 @@ function downloadCsv(listings) {
   a.download = `preciocr-base-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function parseStoreLocations(text) {
+  return text.split(/\r?\n/).filter((line) => line.trim()).map((line, index) => {
+    const parts = line.split("|").map((part) => part.trim());
+    if (parts.length > 3 || !parts[0]) {
+      throw new Error(`Local ${index + 1}: usa nombre | dirección | provincia.`);
+    }
+    const [name, address, province] = parts;
+    return { name, address, province, availability: "unknown" };
+  });
 }
 
 export default function AdminPanel() {
@@ -220,27 +234,35 @@ export default function AdminPanel() {
     setBusy(true);
     setMessage("");
 
-    const res = await fetch("/api/admin/listings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ listing }),
-    });
+    try {
+      const { store_locations_text, ...fields } = listing;
+      const storeLocations = listing.category === "tech"
+        ? parseStoreLocations(store_locations_text)
+        : [];
+      const res = await fetch("/api/admin/listings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listing: { ...fields, store_locations: storeLocations } }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setMessage(data.error || "No se pudo guardar.");
+      if (!res.ok) {
+        setMessage(data.error || "No se pudo guardar.");
+        return;
+      }
+
+      setMessage(`Guardado: ${data.inserted} anuncio.`);
+      setListing({
+        ...emptyListing,
+        observed_at: new Date().toISOString().slice(0, 10),
+      });
+      await loadListings();
+    } catch (error) {
+      setMessage(error?.message || "No se pudo guardar.");
+    } finally {
       setBusy(false);
-      return;
     }
-
-    setMessage(`Guardado: ${data.inserted} anuncio.`);
-    setListing({
-      ...emptyListing,
-      observed_at: new Date().toISOString().slice(0, 10),
-    });
-    await loadListings();
-    setBusy(false);
   }
 
   async function importCsv() {
@@ -488,13 +510,35 @@ export default function AdminPanel() {
               </label>
 
               <label>
-                Provincia
-                <input
+                Provincia (opcional)
+                <select
                   value={listing.province}
                   onChange={(e) => change("province", e.target.value)}
-                  placeholder="San José"
-                />
+                >
+                  <option value="">Sin especificar</option>
+                  {COSTA_RICA_PROVINCES.map((province) => (
+                    <option key={province} value={province}>{province}</option>
+                  ))}
+                </select>
               </label>
+
+              {listing.category === "tech" && (
+                <label className="adminWide">
+                  Locales del producto (opcional)
+                  <textarea
+                    value={listing.store_locations_text}
+                    onChange={(e) => change("store_locations_text", e.target.value)}
+                    placeholder="Nombre del local | Dirección | Provincia"
+                    aria-describedby="store-locations-help"
+                    rows={4}
+                  />
+                  <small id="store-locations-help" className="adminMuted">
+                    Un local por línea: nombre | dirección | provincia. Agrega solo
+                    ubicaciones indicadas por la fuente. El inventario del producto
+                    queda sin confirmar.
+                  </small>
+                </label>
+              )}
 
               <label className="adminWide">
                 URL
@@ -549,6 +593,10 @@ export default function AdminPanel() {
             <p className="adminMuted">
               Descarga la plantilla, llénala en Excel o Google Sheets y
               expórtala como CSV.
+            </p>
+            <p className="adminMuted">
+              Para tecnología, la columna opcional store_locations acepta una
+              lista JSON de locales. La descarga conserva estos datos.
             </p>
 
             <div className="adminImportActions">
@@ -638,6 +686,11 @@ export default function AdminPanel() {
                           .filter(Boolean)
                           .join(" · ")}
                       </small>
+                      {row.category === "tech" && Array.isArray(row.store_locations) && row.store_locations.length > 0 && (
+                        <small>
+                          {row.store_locations.map((location) => location.name).join(" · ")}
+                        </small>
+                      )}
                     </td>
                     <td>{money(row.price_crc)}</td>
                     <td>{row.observed_at || "—"}</td>

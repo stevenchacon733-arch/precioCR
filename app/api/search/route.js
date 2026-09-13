@@ -7,6 +7,11 @@ import {
 } from "@/lib/database-listings";
 import { analyzeCarMarket, summarizePrices } from "@/lib/pricing";
 import { parseCarQuery } from "@/lib/car";
+import {
+  normalizeProvince,
+  filterCarOffersByProvince,
+  sourcesForFilteredOffers,
+} from "@/lib/location";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +22,8 @@ export async function GET(request) {
   const requestedType = searchParams.get("type") || "tech";
   const allowedTypes = new Set(["car", "tech"]);
   const type = allowedTypes.has(requestedType) ? requestedType : "tech";
+  const requestedProvince = type === "car" ? (searchParams.get("province") || "").trim() : "";
+  const province = normalizeProvince(requestedProvince);
 
   if (q.length < 2) {
     return NextResponse.json(
@@ -26,22 +33,31 @@ export async function GET(request) {
   }
 
 
+  if (requestedProvince && !province) {
+    return NextResponse.json(
+      { error: "Selecciona una provincia válida de Costa Rica." },
+      { status: 400 }
+    );
+  }
+
   const [automatic, database] = await Promise.all([
     searchSources(q, type),
     searchDatabaseListings(q, type),
   ]);
 
-  const offers = dedupeCombinedOffers([
+  const combinedOffers = dedupeCombinedOffers([
     ...(automatic.offers || []),
     ...(database.offers || []),
   ]);
 
-  const sources = mergeSourceStatuses(
+  const combinedSources = mergeSourceStatuses(
     automatic.sources || [],
     database.sources || []
   );
 
   if (type === "car") {
+    const { offers, locationFilter } = filterCarOffersByProvince(combinedOffers, province);
+    const sources = sourcesForFilteredOffers(combinedSources, offers, province);
     const spec = automatic.spec || parseCarQuery(q);
     const stats = analyzeCarMarket(offers, spec);
 
@@ -52,11 +68,12 @@ export async function GET(request) {
       spec,
       offers,
       sources,
+      locationFilter,
       externalSources: automatic.externalSources || [],
       fx: automatic.fx || null,
       database: {
         configured: database.configured,
-        count: database.offers?.length || 0,
+        count: offers.filter((offer) => offer.dataOrigin === "database").length,
         error: database.error || null,
       },
       stats,
@@ -65,6 +82,8 @@ export async function GET(request) {
     });
   }
 
+  const offers = combinedOffers;
+  const sources = combinedSources;
   const stats = summarizePrices(offers);
 
   return NextResponse.json({

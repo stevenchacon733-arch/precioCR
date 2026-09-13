@@ -13,6 +13,70 @@ export const dynamic = "force-dynamic";
 const ALLOWED_CATEGORIES = new Set(["car", "tech"]);
 const ALLOWED_SEGMENTS = new Set(["particular", "portal", "agencia", "retail"]);
 const ALLOWED_STATUS = new Set(["active", "sold", "removed", "expired"]);
+const ALLOWED_AVAILABILITY = new Set(["available", "unavailable", "unknown"]);
+
+function cleanStoreLocations(value) {
+  if (value == null || value === "") return [];
+  let locations = value;
+  if (typeof value === "string") {
+    if (!value.trim()) return [];
+    if (value.length > 50000) throw new Error("store_locations supera el tamaño permitido.");
+    try {
+      locations = JSON.parse(value);
+    } catch {
+      throw new Error("store_locations debe contener una lista JSON válida.");
+    }
+  }
+  if (!Array.isArray(locations) || locations.length > 50) {
+    throw new Error("store_locations debe ser una lista de hasta 50 locales.");
+  }
+
+  return locations.map((location, index) => {
+    const prefix = `Local ${index + 1}`;
+    if (!location || typeof location !== "object" || Array.isArray(location)) {
+      throw new Error(`${prefix}: debe ser un objeto con nombre y ubicación.`);
+    }
+    function textField(field, maxLength, required = false) {
+      const value = location[field];
+      if (value != null && typeof value !== "string") {
+        throw new Error(`${prefix}: ${field} debe ser texto.`);
+      }
+      const text = (value || "").trim();
+      if ((required && !text) || text.length > maxLength) {
+        throw new Error(`${prefix}: ${field} ${required ? "es obligatorio y " : ""}admite hasta ${maxLength} caracteres.`);
+      }
+      return text;
+    }
+
+    const name = textField("name", 160, true);
+    const address = textField("address", 400);
+    const province = textField("province", 80);
+    const url = textField("url", 2048);
+    const availability = textField("availability", 20) || "unknown";
+    if (!ALLOWED_AVAILABILITY.has(availability)) {
+      throw new Error(`${prefix}: availability debe ser available, unavailable o unknown.`);
+    }
+    if (url) {
+      let parsed;
+      try {
+        parsed = new URL(url);
+      } catch {
+        throw new Error(`${prefix}: URL inválida.`);
+      }
+      if (!["https:", "http:"].includes(parsed.protocol) || parsed.username || parsed.password) {
+        throw new Error(`${prefix}: usa una URL pública http o https sin credenciales.`);
+      }
+    }
+
+    return {
+      name,
+      ...(address ? { address } : {}),
+      ...(province ? { province } : {}),
+      availability,
+      ...(url ? { url } : {}),
+    };
+  });
+}
 
 function isoDate(value) {
   if (!value) return null;
@@ -107,6 +171,14 @@ function cleanRow(input = {}) {
     throw new Error("price_crc debe ser mayor que 0.");
   }
 
+  const storeLocations = cleanStoreLocations(input.store_locations);
+  if (storeLocations.length) {
+    if (row.category !== "tech") {
+      throw new Error("store_locations solo aplica a productos de tecnología.");
+    }
+    row.store_locations = storeLocations;
+  }
+
   return row;
 }
 
@@ -153,7 +225,18 @@ export async function POST(request) {
       );
     }
 
-    const rows = incoming.map(cleanRow);
+    const rows = incoming.map((input, index) => {
+      try {
+        return cleanRow(input);
+      } catch (error) {
+        throw new Error(`Fila ${index + 1}: ${error.message}`);
+      }
+    });
+    // PostgREST requires the same keys in every row of a batch. Omit the new
+    // column altogether when unused so existing databases continue to work.
+    if (rows.some((row) => row.store_locations)) {
+      for (const row of rows) row.store_locations ??= [];
+    }
     const inserted = await insertListings(rows);
 
     return NextResponse.json({

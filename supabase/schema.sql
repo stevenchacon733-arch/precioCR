@@ -25,6 +25,8 @@ create table if not exists public.listings (
   fuel text,
   condition text,
   province text,
+  store_locations jsonb not null default '[]'::jsonb
+    check (jsonb_typeof(store_locations) = 'array'),
 
   url text,
   verified boolean not null default true,
