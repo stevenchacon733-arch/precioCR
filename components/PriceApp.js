@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { COSTA_RICA_PROVINCES } from "@/lib/location";
 
 const money = (value) =>
   value == null
@@ -294,6 +293,71 @@ function OfferCard({ offer, i, type }) {
   );
 }
 
+const PROVINCE_MAP_SHAPES = [
+  { name: "Guanacaste", path: "M34 34L105 20L124 78L92 132L43 115Z", label: [70, 78] },
+  { name: "Alajuela", path: "M105 20L158 34L145 116L92 132L124 78Z", label: [126, 72] },
+  { name: "Limón", path: "M158 34L216 76L226 154L175 191L158 165L145 116Z", label: [188, 105] },
+  { name: "Heredia", path: "M92 132L145 116L158 165L122 181L103 169Z", label: [124, 145] },
+  { name: "San José", path: "M43 115L92 132L103 169L122 181L105 236L58 216L45 163Z", label: [76, 174] },
+  { name: "Cartago", path: "M122 181L175 191L170 254L107 250L105 236Z", label: [140, 218] },
+  { name: "Puntarenas", path: "M43 115L45 163L58 216L107 250L170 254L145 302L96 370L35 340L51 265L36 216L28 160Z", label: [78, 282] },
+];
+
+function ProvinceMap({ province, onSelect }) {
+  function selectProvince(name) {
+    onSelect(name);
+  }
+
+  function handleKeyDown(event, name) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      selectProvince(name);
+    }
+  }
+
+  return (
+    <div className="provinceMapPicker">
+      <div className="provinceMapHead">
+        <div>
+          <span className="eyebrow">SELECCIONA EN EL MAPA</span>
+          <strong>{province || "Todo Costa Rica"}</strong>
+        </div>
+        <button
+          type="button"
+          className={!province ? "active" : ""}
+          onClick={() => selectProvince("")}
+        >
+          Todo el país
+        </button>
+      </div>
+      <svg
+        className="provinceMap"
+        viewBox="0 0 250 390"
+        role="group"
+        aria-label="Mapa interactivo de las provincias de Costa Rica"
+      >
+        <path className="provinceMapShadow" d="M34 34L105 20L158 34L216 76L226 154L175 191L170 254L145 302L96 370L35 340L51 265L28 160Z" />
+        {PROVINCE_MAP_SHAPES.map(({ name, path, label }) => (
+          <g
+            key={name}
+            className={`provinceShape ${province === name ? "active" : ""}`}
+            role="button"
+            tabIndex="0"
+            aria-label={`Filtrar por ${name}`}
+            aria-pressed={province === name}
+            onClick={() => selectProvince(name)}
+            onKeyDown={(event) => handleKeyDown(event, name)}
+          >
+            <path d={path} />
+            <text x={label[0]} y={label[1]}>{name}</text>
+          </g>
+        ))}
+      </svg>
+      <p className="provinceMapHint">Haz clic en una provincia para actualizar la búsqueda.</p>
+    </div>
+  );
+}
+
 export default function PriceApp() {
   const [type, setType] = useState("car");
   const [query, setQuery] = useState("");
@@ -491,17 +555,10 @@ export default function PriceApp() {
                 </label>
                 {locationEnabled && (
                   <div className="locationProvinceField" id="location-province-field">
-                    <label htmlFor="filter-province">Provincia</label>
-                    <select
-                      id="filter-province"
-                      value={province}
-                      onChange={(e) => changeLocation(true, e.target.value)}
-                    >
-                      <option value="">Todo Costa Rica</option>
-                      {COSTA_RICA_PROVINCES.map((name) => (
-                        <option value={name} key={name}>{name}</option>
-                      ))}
-                    </select>
+                    <ProvinceMap
+                      province={province}
+                      onSelect={(nextProvince) => changeLocation(true, nextProvince)}
+                    />
                   </div>
                 )}
                 <p id="location-filter-help">

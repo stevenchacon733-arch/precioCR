@@ -826,12 +826,27 @@ footer{border-top:1px solid var(--line);background:white}
 .locationToggle{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:750;cursor:pointer}
 .locationToggle input{width:18px;height:18px;margin:0;accent-color:var(--green);flex-shrink:0}
 .locationToggle small{font-weight:500;color:var(--muted)}
-.locationProvinceField{display:flex;align-items:center;gap:9px;margin-left:auto;font-size:12px}
-.locationProvinceField label{font-weight:700;color:#516159}
-.locationProvinceField select{
-  min-width:180px;max-width:100%;font:inherit;color:var(--ink);background:white;
-  border:1px solid #cbd8d0;border-radius:10px;padding:9px 12px;
+.locationProvinceField{width:100%;margin-left:0}
+.provinceMapPicker{
+  width:min(100%,430px);margin:2px auto 0;padding:14px 14px 11px;
+  border:1px solid #d8e5de;border-radius:15px;background:#fbfdfb;
 }
+.provinceMapHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.provinceMapHead strong{display:block;margin-top:3px;font-size:14px}
+.provinceMapHead button{
+  border:1px solid #bfd9cb;border-radius:9px;background:white;color:#176447;
+  padding:8px 10px;font-size:11px;font-weight:800;white-space:nowrap;
+}
+.provinceMapHead button.active{background:var(--navy);border-color:var(--navy);color:white}
+.provinceMap{display:block;width:min(100%,250px);height:auto;margin:6px auto 0;overflow:visible}
+.provinceMapShadow{fill:#e8f3ed;stroke:#cfe2d8;stroke-width:3;stroke-linejoin:round}
+.provinceShape{cursor:pointer;outline:none}
+.provinceShape path{fill:#cfe9dc;stroke:#fff;stroke-width:2.5;stroke-linejoin:round;transition:fill .16s ease,filter .16s ease}
+.provinceShape text{fill:#315d49;font-size:9px;font-weight:800;text-anchor:middle;pointer-events:none;user-select:none}
+.provinceShape:hover path,.provinceShape:focus path{fill:#8ed0b1;filter:drop-shadow(0 3px 3px rgba(14,88,61,.18))}
+.provinceShape.active path{fill:var(--green);filter:drop-shadow(0 4px 4px rgba(14,88,61,.22))}
+.provinceShape.active text{fill:white}
+.provinceMapHint{margin:0;text-align:center;color:var(--muted);font-size:10px;line-height:1.4}
 .locationSearchFilter>p{flex-basis:100%;margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
 .locationResultNotice{
   display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -861,15 +876,17 @@ footer{border-top:1px solid var(--line);background:white}
 .storeLocations p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
 .offerFilterEmpty{padding:18px;background:#f7faf8;border-radius:12px;color:var(--muted);font-size:13px;line-height:1.5}
 .offerFilterEmpty p{margin:0 0 10px}
-.locationSearchFilter input:focus-visible,.locationSearchFilter select:focus-visible,
+.locationSearchFilter input:focus-visible,.provinceMapHead button:focus-visible,
+.provinceShape:focus-visible,
 .locationResultNotice button:focus-visible,.offerFilterEmpty button:focus-visible,
 .liveOffer a:focus-visible,.storeLocations summary:focus-visible{
   outline:3px solid #489d7b;outline-offset:4px;border-radius:4px;
 }
 @media(max-width:560px){
   .locationSearchFilter{padding:13px}
-  .locationProvinceField{width:100%;margin-left:0;flex-wrap:wrap}
-  .locationProvinceField select{flex:1;min-width:0}
+  .provinceMapPicker{padding:12px 10px 9px}
+  .provinceMapHead{align-items:flex-start}
+  .provinceMapHead button{padding:7px 8px}
   .locationResultNotice{align-items:flex-start;flex-direction:column}
   .locationResultNotice button{width:100%}
   .storeLocations{grid-column:1/-1}
