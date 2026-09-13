@@ -126,7 +126,7 @@ function SourceStatus({ sources = [] }) {
 
       {reachableNoMatch.length > 0 && (
         <div className="sourceQuietLine">
-          <span>Consultadas sin coincidencias en la ubicación seleccionada:</span>
+          <span>Consultadas sin coincidencias exactas:</span>
           <b>{reachableNoMatch.map((s) => s.source).join(" · ")}</b>
           <small>{reachableNoMatch.map((s) => s.error?.replace("Conector OK · ", "")).join(" · ")}</small>
         </div>
@@ -196,9 +196,10 @@ function YearAlternatives({ offers = [], requestedYear }) {
     <div className="yearAlternatives" role="status">
       <div>
         <span className="eyebrow">OTROS AÑOS DISPONIBLES</span>
-        <h3>No mezclamos estos datos en el precio recomendado.</h3>
+        <h3>Inventario adicional para comparar.</h3>
         <p>
-          Sí encontramos anuncios parecidos, pero son de años distintos a {requestedYear}.
+          Estos anuncios sirven como referencia, pero no se mezclan en el precio recomendado
+          {requestedYear ? ` del año ${requestedYear}` : ""}.
         </p>
       </div>
       <div className="yearAlternativeList">
