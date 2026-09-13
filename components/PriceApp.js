@@ -473,21 +473,21 @@ export default function PriceApp() {
     const selectedProvince = enabled ? nextProvince : "";
     setLocationEnabled(enabled);
     setProvince(nextProvince);
-      setLocationLabel(nextProvince);
-
-      function applyLocation(location, radius) {
-        const selectedProvince = provinceFromLocationQuery(location);
-        if (!selectedProvince) {
-          setError("Selecciona una ciudad principal de Costa Rica o una provincia válida.");
-          return;
-        }
-        setLocationModalOpen(false);
-        changeLocation(true, selectedProvince);
-        setLocationLabel(`${location} · ${radius} km`);
-      }
+    setLocationLabel(nextProvince);
     if (previousProvince !== selectedProvince && (result || loading)) {
       search(result?.query || requestedQuery.current || query, { province: selectedProvince });
     }
+  }
+
+  function applyLocation(location, radius) {
+    const selectedProvince = provinceFromLocationQuery(location);
+    if (!selectedProvince) {
+      setError("Selecciona una ciudad principal de Costa Rica o una provincia válida.");
+      return;
+    }
+    setLocationModalOpen(false);
+    changeLocation(true, selectedProvince);
+    setLocationLabel(`${location} · ${radius} km`);
   }
 
   const availableSourceNames = Array.from(
