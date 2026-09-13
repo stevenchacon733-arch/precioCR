@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { provinceFromLocationQuery } from "@/lib/location";
 
 const money = (value) =>
   value == null
@@ -305,91 +306,73 @@ function OfferCard({ offer, i, type }) {
   );
 }
 
-const PROVINCE_MAP_SHAPES = [
-  { name: "Guanacaste", path: "M34 34L105 20L124 78L92 132L43 115Z", label: [70, 78] },
-  { name: "Alajuela", path: "M105 20L158 34L145 116L92 132L124 78Z", label: [126, 72] },
-  { name: "Limón", path: "M158 34L216 76L226 154L175 191L158 165L145 116Z", label: [188, 105] },
-  { name: "Heredia", path: "M92 132L145 116L158 165L122 181L103 169Z", label: [124, 145] },
-  { name: "San José", path: "M43 115L92 132L103 169L122 181L105 236L58 216L45 163Z", label: [76, 174] },
-  { name: "Cartago", path: "M122 181L175 191L170 254L107 250L105 236Z", label: [140, 218] },
-  { name: "Puntarenas", path: "M43 115L45 163L58 216L107 250L170 254L145 302L96 370L35 340L51 265L36 216L28 160Z", label: [78, 282] },
-];
+function LocationModal({ type, initialLocation, onClose, onApply }) {
+  const [draftLocation, setDraftLocation] = useState(initialLocation || "San José");
+  const [radius, setRadius] = useState("65");
+  const mapQuery = `${type === "tech" ? "tiendas de tecnología" : "concesionarios de autos"} en ${draftLocation || "San José"}, Costa Rica`;
 
-function ProvinceMap({ province, onSelect, type }) {
-  function selectProvince(name) {
-    onSelect(name);
+  function useCurrentLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setDraftLocation(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`),
+      () => setDraftLocation("San José")
+    );
   }
 
-  function handleKeyDown(event, name) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      selectProvince(name);
-    }
+  function apply() {
+    onApply(draftLocation, radius);
   }
 
   return (
-    <div className="provinceMapPicker">
-      <div className="provinceMapHead">
-        <div>
-          <span className="eyebrow">SELECCIONA EN EL MAPA</span>
-          <strong>{province || "Todo Costa Rica"}</strong>
+    <div className="locationModalBackdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="locationModal" role="dialog" aria-modal="true" aria-labelledby="location-modal-title">
+        <div className="locationModalHead">
+          <h2 id="location-modal-title">Cambiar ubicación</h2>
+          <button type="button" className="locationModalClose" onClick={onClose} aria-label="Cerrar">×</button>
         </div>
-        <button
-          type="button"
-          className={!province ? "active" : ""}
-          onClick={() => selectProvince("")}
-        >
-          Todo el país
-        </button>
-      </div>
-      <svg
-        className="provinceMap"
-        viewBox="0 0 250 390"
-        role="group"
-        aria-label="Mapa interactivo de las provincias de Costa Rica"
-      >
-        <path className="provinceMapShadow" d="M34 34L105 20L158 34L216 76L226 154L175 191L170 254L145 302L96 370L35 340L51 265L28 160Z" />
-        {PROVINCE_MAP_SHAPES.map(({ name, path, label }) => (
-          <g
-            key={name}
-            className={`provinceShape ${province === name ? "active" : ""}`}
-            role="button"
-            tabIndex="0"
-            aria-label={`Filtrar por ${name}`}
-            aria-pressed={province === name}
-            onClick={() => selectProvince(name)}
-            onKeyDown={(event) => handleKeyDown(event, name)}
-          >
-            <path d={path} />
-            <text x={label[0]} y={label[1]}>{name}</text>
-          </g>
-        ))}
-      </svg>
-      <div className="googleMapPreview">
-        <iframe
-          title={`Mapa de ${type === "tech" ? "tiendas de tecnología" : "ubicaciones de autos"}`}
-          src={`https://www.google.com/maps?q=${encodeURIComponent(
-            `${type === "tech" ? "tiendas de tecnología" : "concesionarios de autos"}${
-              province ? ` en ${province}` : " en Costa Rica"
-            }`
-          )}&output=embed`}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-        <a
-          className="googleMapOpen"
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            `${type === "tech" ? "tiendas de tecnología" : "concesionarios de autos"}${
-              province ? `, ${province}` : ", Costa Rica"
-            }`
-          )}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Abrir búsqueda completa en Google Maps ↗
-        </a>
-      </div>
-      <p className="provinceMapHint">Haz clic en una provincia para actualizar la búsqueda.</p>
+        <div className="locationModalBody">
+          <label className="locationModalLabel" htmlFor="location-query">Buscar por ciudad, localidad o código postal</label>
+          <div className="locationQueryField">
+            <span aria-hidden="true">●</span>
+            <div>
+              <small>Ubicación</small>
+              <input
+                id="location-query"
+                value={draftLocation}
+                onChange={(event) => setDraftLocation(event.target.value)}
+                placeholder="San José"
+                autoFocus
+              />
+            </div>
+          </div>
+          <label className="locationRadiusField" htmlFor="location-radius">
+            <span><small>Radio</small>{radius} kilómetros</span>
+            <select id="location-radius" value={radius} onChange={(event) => setRadius(event.target.value)}>
+              <option value="10">10 km</option>
+              <option value="25">25 km</option>
+              <option value="65">65 km</option>
+              <option value="100">100 km</option>
+            </select>
+          </label>
+          <button type="button" className="locationCurrentButton" onClick={useCurrentLocation}>
+            Usar mi ubicación actual
+          </button>
+          <div className="locationModalMap">
+            <div className="locationRadiusCircle" aria-hidden="true" />
+            <iframe
+              title={`Mapa de ${draftLocation || "San José"}`}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <p className="locationModalInfo"><strong>Información sobre la ubicación</strong>El filtro utiliza la provincia asociada a la ciudad seleccionada. El radio se conserva para orientar la búsqueda en el mapa.</p>
+        </div>
+        <div className="locationModalActions">
+          <button type="button" className="locationModalSecondary" onClick={onClose}>Cancelar</button>
+          <button type="button" className="locationModalPrimary" onClick={apply}>Aplicar ubicación</button>
+        </div>
+      </section>
     </div>
   );
 }
@@ -403,6 +386,8 @@ export default function PriceApp() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
   const [locationEnabled, setLocationEnabled] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [locationLabel, setLocationLabel] = useState("");
   const [province, setProvince] = useState("");
   const searchRequest = useRef(null);
   const requestedQuery = useRef("");
@@ -488,6 +473,18 @@ export default function PriceApp() {
     const selectedProvince = enabled ? nextProvince : "";
     setLocationEnabled(enabled);
     setProvince(nextProvince);
+      setLocationLabel(nextProvince);
+
+      function applyLocation(location, radius) {
+        const selectedProvince = provinceFromLocationQuery(location);
+        if (!selectedProvince) {
+          setError("Selecciona una ciudad principal de Costa Rica o una provincia válida.");
+          return;
+        }
+        setLocationModalOpen(false);
+        changeLocation(true, selectedProvince);
+        setLocationLabel(`${location} · ${radius} km`);
+      }
     if (previousProvince !== selectedProvince && (result || loading)) {
       search(result?.query || requestedQuery.current || query, { province: selectedProvince });
     }
@@ -590,13 +587,13 @@ export default function PriceApp() {
                   <span>Filtrar {type === "tech" ? "tiendas" : "ubicación"} <small>(opcional)</small></span>
                 </label>
                 {locationEnabled && (
-                  <div className="locationProvinceField" id="location-province-field">
-                    <ProvinceMap
-                      province={province}
-                      type={type}
-                      onSelect={(nextProvince) => changeLocation(true, nextProvince)}
-                    />
-                  </div>
+                  <>
+                    <button type="button" className="locationChangeButton" onClick={() => setLocationModalOpen(true)}>
+                      <span aria-hidden="true">●</span>
+                      <span><small>Ubicación</small>{locationLabel || province || "Todo Costa Rica"}</span>
+                      <b>›</b>
+                    </button>
+                  </>
                 )}
                 <p id="location-filter-help">
                   {locationEnabled && province
@@ -964,6 +961,14 @@ export default function PriceApp() {
           <p>© 2026 PrecioCR · V8 beta</p>
         </div>
       </footer>
+      {locationModalOpen && (
+        <LocationModal
+          type={type}
+          initialLocation={locationLabel.split(" · ")[0] || province || "San José"}
+          onClose={() => setLocationModalOpen(false)}
+          onApply={applyLocation}
+        />
+      )}
     </>
   );
 }

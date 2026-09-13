@@ -827,33 +827,17 @@ footer{border-top:1px solid var(--line);background:white}
 .locationToggle input{width:18px;height:18px;margin:0;accent-color:var(--green);flex-shrink:0}
 .locationToggle small{font-weight:500;color:var(--muted)}
 .locationProvinceField{width:100%;margin-left:0}
-.provinceMapPicker{
-  width:min(100%,430px);margin:2px auto 0;padding:14px 14px 11px;
-  border:1px solid #d8e5de;border-radius:15px;background:#fbfdfb;
+.locationChangeButton{
+  width:min(100%,430px);margin:2px auto 0;padding:10px 12px;display:flex;align-items:center;gap:11px;
+  border:1px solid #cbd8d0;border-radius:11px;background:white;color:var(--ink);text-align:left;
 }
-.provinceMapHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.provinceMapHead strong{display:block;margin-top:3px;font-size:14px}
-.provinceMapHead button{
-  border:1px solid #bfd9cb;border-radius:9px;background:white;color:#176447;
-  padding:8px 10px;font-size:11px;font-weight:800;white-space:nowrap;
-}
-.provinceMapHead button.active{background:var(--navy);border-color:var(--navy);color:white}
-.provinceMap{display:block;width:min(100%,250px);height:auto;margin:6px auto 0;overflow:visible}
-.provinceMapShadow{fill:#e8f3ed;stroke:#cfe2d8;stroke-width:3;stroke-linejoin:round}
-.provinceShape{cursor:pointer;outline:none}
-.provinceShape path{fill:#cfe9dc;stroke:#fff;stroke-width:2.5;stroke-linejoin:round;transition:fill .16s ease,filter .16s ease}
-.provinceShape text{fill:#315d49;font-size:9px;font-weight:800;text-anchor:middle;pointer-events:none;user-select:none}
-.provinceShape:hover path,.provinceShape:focus path{fill:#8ed0b1;filter:drop-shadow(0 3px 3px rgba(14,88,61,.18))}
-.provinceShape.active path{fill:var(--green);filter:drop-shadow(0 4px 4px rgba(14,88,61,.22))}
-.provinceShape.active text{fill:white}
-.provinceMapHint{margin:0;text-align:center;color:var(--muted);font-size:10px;line-height:1.4}
-.googleMapPreview{margin-top:9px;border-top:1px solid #e2ece6;padding-top:9px}
-.googleMapPreview iframe{
-  display:block;width:100%;height:150px;border:0;border-radius:11px;background:#e8f1ed;
-}
-.googleMapOpen,.storeMapLink{display:inline-block;color:#176447;font-size:11px;font-weight:800}
-.googleMapOpen{margin-top:7px}
-.googleMapOpen:hover,.storeMapLink:hover{text-decoration:underline;text-underline-offset:3px}
+.locationChangeButton>span:first-child{color:#65706c;font-size:18px}
+.locationChangeButton>span:nth-child(2){display:grid;gap:2px;flex:1;font-size:14px}
+.locationChangeButton small{color:var(--muted);font-size:10px}
+.locationChangeButton b{font-size:24px;color:var(--muted);font-weight:400}
+.locationChangeButton:hover{border-color:#91c4ab;background:#fbfefc}
+.storeMapLink{display:inline-block;color:#176447;font-size:11px;font-weight:800}
+.storeMapLink:hover{text-decoration:underline;text-underline-offset:3px}
 .locationSearchFilter>p{flex-basis:100%;margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
 .locationResultNotice{
   display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -884,17 +868,43 @@ footer{border-top:1px solid var(--line);background:white}
 .storeLocations p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
 .offerFilterEmpty{padding:18px;background:#f7faf8;border-radius:12px;color:var(--muted);font-size:13px;line-height:1.5}
 .offerFilterEmpty p{margin:0 0 10px}
-.locationSearchFilter input:focus-visible,.provinceMapHead button:focus-visible,
-.provinceShape:focus-visible,
+.locationModalBackdrop{
+  position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;
+  background:rgba(8,20,14,.52);backdrop-filter:blur(5px)
+}
+.locationModal{
+  width:min(100%,560px);max-height:min(94vh,760px);overflow:auto;background:white;border-radius:18px;
+  box-shadow:0 25px 80px rgba(8,24,16,.3);color:var(--ink)
+}
+.locationModalHead{display:flex;align-items:center;justify-content:space-between;padding:19px 22px;border-bottom:1px solid var(--line)}
+.locationModalHead h2{margin:0;font-size:24px;letter-spacing:-.035em}
+.locationModalClose{width:42px;height:42px;border:0;border-radius:50%;background:#e8ecef;color:#697177;font-size:34px;line-height:1;font-weight:300}
+.locationModalClose:hover{background:#dfe5e8}
+.locationModalBody{padding:14px 22px 22px}
+.locationModalLabel{display:block;margin-bottom:7px;color:#687178;font-size:13px}
+.locationQueryField,.locationRadiusField{min-height:70px;display:flex;align-items:center;gap:13px;border:1px solid #ccd3d8;border-radius:9px;background:white}
+.locationQueryField{padding:9px 16px}.locationQueryField>span{color:#6d7479;font-size:21px}.locationQueryField>div{display:grid;gap:3px;flex:1}
+.locationQueryField small,.locationRadiusField small{display:block;color:#7a8287;font-size:12px}
+.locationQueryField input{width:100%;border:0;outline:0;padding:0;color:var(--ink);font-size:18px}
+.locationRadiusField{position:relative;margin-top:14px;padding:9px 17px}.locationRadiusField>span{display:grid;gap:3px;font-size:18px}
+.locationRadiusField select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}.locationRadiusField:after{content:"▾";margin-left:auto;color:#222;font-size:18px}
+.locationCurrentButton{margin:11px 0;border:0;background:transparent;color:var(--green-dark);font-size:12px;font-weight:800;padding:4px 0}
+.locationModalMap{position:relative;height:270px;overflow:hidden;border-radius:10px;background:#d9ece3}.locationModalMap iframe{display:block;width:100%;height:100%;border:0}
+.locationRadiusCircle{position:absolute;z-index:1;top:50%;left:50%;width:58%;aspect-ratio:1;border:3px solid rgba(22,105,197,.55);border-radius:50%;background:rgba(37,126,206,.10);transform:translate(-50%,-50%);pointer-events:none}
+.locationModalInfo{margin:14px 0 0;font-size:14px;line-height:1.45;color:#30353a}.locationModalInfo strong{display:block;margin-bottom:3px;font-size:18px;color:#101316}
+.locationModalActions{display:flex;justify-content:flex-end;gap:9px;padding:13px 22px;border-top:1px solid var(--line)}.locationModalActions button{border:0;border-radius:10px;padding:11px 15px;font-size:13px;font-weight:800}
+.locationModalSecondary{background:#eef2f0;color:#42534a}.locationModalPrimary{background:var(--navy);color:white}.locationModalPrimary:hover{background:var(--green-dark)}
+.locationSearchFilter input:focus-visible,.locationChangeButton:focus-visible,
+.locationModal button:focus-visible,.locationModal input:focus-visible,
 .locationResultNotice button:focus-visible,.offerFilterEmpty button:focus-visible,
 .liveOffer a:focus-visible,.storeLocations summary:focus-visible{
   outline:3px solid #489d7b;outline-offset:4px;border-radius:4px;
 }
 @media(max-width:560px){
   .locationSearchFilter{padding:13px}
-  .provinceMapPicker{padding:12px 10px 9px}
-  .provinceMapHead{align-items:flex-start}
-  .provinceMapHead button{padding:7px 8px}
+  .locationModalBackdrop{padding:0;align-items:end}.locationModal{max-height:94vh;border-radius:18px 18px 0 0}
+  .locationModalHead{padding:16px 15px}.locationModalBody{padding:12px 15px 18px}.locationModalActions{padding:12px 15px}.locationModalActions button{flex:1}
+  .locationModalMap{height:230px}
   .locationResultNotice{align-items:flex-start;flex-direction:column}
   .locationResultNotice button{width:100%}
   .storeLocations{grid-column:1/-1}
