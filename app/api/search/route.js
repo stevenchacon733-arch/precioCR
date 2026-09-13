@@ -10,6 +10,7 @@ import { parseCarQuery } from "@/lib/car";
 import {
   normalizeProvince,
   filterCarOffersByProvince,
+  filterTechOffersByProvince,
   sourcesForFilteredOffers,
 } from "@/lib/location";
 
@@ -22,7 +23,7 @@ export async function GET(request) {
   const requestedType = searchParams.get("type") || "tech";
   const allowedTypes = new Set(["car", "tech"]);
   const type = allowedTypes.has(requestedType) ? requestedType : "tech";
-  const requestedProvince = type === "car" ? (searchParams.get("province") || "").trim() : "";
+  const requestedProvince = (searchParams.get("province") || "").trim();
   const province = normalizeProvince(requestedProvince);
 
   if (q.length < 2) {
@@ -82,8 +83,8 @@ export async function GET(request) {
     });
   }
 
-  const offers = combinedOffers;
-  const sources = combinedSources;
+  const { offers, locationFilter } = filterTechOffersByProvince(combinedOffers, province);
+  const sources = sourcesForFilteredOffers(combinedSources, offers, province);
   const stats = summarizePrices(offers);
 
   return NextResponse.json({
@@ -92,6 +93,7 @@ export async function GET(request) {
     fetchedAt: new Date().toISOString(),
     offers,
     sources,
+    locationFilter,
     externalSources: automatic.externalSources || [],
     database: {
       configured: database.configured,

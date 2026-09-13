@@ -211,6 +211,18 @@ function StoreLocations({ offer }) {
                 {(location.address || location.province) && (
                   <span>{[location.address, location.province].filter(Boolean).join(" · ")}</span>
                 )}
+                <a
+                  className="storeMapLink"
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    [location.name, location.address, location.province, "Costa Rica"]
+                      .filter(Boolean)
+                      .join(", ")
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Ver en Google Maps ↗
+                </a>
                 <small className={location.availability === "available" ? "branchAvailable" : ""}>
                   {location.availability === "available"
                     ? "Producto disponible en este local"
@@ -303,7 +315,7 @@ const PROVINCE_MAP_SHAPES = [
   { name: "Puntarenas", path: "M43 115L45 163L58 216L107 250L170 254L145 302L96 370L35 340L51 265L36 216L28 160Z", label: [78, 282] },
 ];
 
-function ProvinceMap({ province, onSelect }) {
+function ProvinceMap({ province, onSelect, type }) {
   function selectProvince(name) {
     onSelect(name);
   }
@@ -353,6 +365,30 @@ function ProvinceMap({ province, onSelect }) {
           </g>
         ))}
       </svg>
+      <div className="googleMapPreview">
+        <iframe
+          title={`Mapa de ${type === "tech" ? "tiendas de tecnología" : "ubicaciones de autos"}`}
+          src={`https://www.google.com/maps?q=${encodeURIComponent(
+            `${type === "tech" ? "tiendas de tecnología" : "concesionarios de autos"}${
+              province ? ` en ${province}` : " en Costa Rica"
+            }`
+          )}&output=embed`}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+        <a
+          className="googleMapOpen"
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            `${type === "tech" ? "tiendas de tecnología" : "concesionarios de autos"}${
+              province ? `, ${province}` : ", Costa Rica"
+            }`
+          )}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Abrir búsqueda completa en Google Maps ↗
+        </a>
+      </div>
       <p className="provinceMapHint">Haz clic en una provincia para actualizar la búsqueda.</p>
     </div>
   );
@@ -396,7 +432,7 @@ export default function PriceApp() {
     const version = ++requestVersion.current;
     const selectedProvince = options.province ?? (locationEnabled ? province : "");
     const params = new URLSearchParams({ q, type });
-    if (type === "car" && selectedProvince) params.set("province", selectedProvince);
+    if (selectedProvince) params.set("province", selectedProvince);
 
     setQuery(q);
     setLoading(true);
@@ -470,7 +506,7 @@ export default function PriceApp() {
       return sourceOk && groupOk;
     }) || [];
 
-  const locationFilter = result?.type === "car" ? result.locationFilter : null;
+  const locationFilter = result?.locationFilter || null;
 
   return (
     <>
@@ -540,7 +576,7 @@ export default function PriceApp() {
               </button>
             </div>
 
-            {type === "car" && (
+            {(type === "car" || type === "tech") && (
               <div className="locationSearchFilter">
                 <label className="locationToggle" htmlFor="filter-location">
                   <input
@@ -551,20 +587,21 @@ export default function PriceApp() {
                     aria-controls={locationEnabled ? "location-province-field" : undefined}
                     aria-describedby="location-filter-help"
                   />
-                  <span>Filtrar ubicación <small>(opcional)</small></span>
+                  <span>Filtrar {type === "tech" ? "tiendas" : "ubicación"} <small>(opcional)</small></span>
                 </label>
                 {locationEnabled && (
                   <div className="locationProvinceField" id="location-province-field">
                     <ProvinceMap
                       province={province}
+                      type={type}
                       onSelect={(nextProvince) => changeLocation(true, nextProvince)}
                     />
                   </div>
                 )}
                 <p id="location-filter-help">
                   {locationEnabled && province
-                    ? "Solo anuncios con ubicación identificada en esta provincia."
-                    : "Sin filtro, buscamos en todo Costa Rica, incluso anuncios sin ubicación indicada."}
+                    ? `Solo mostramos ${type === "tech" ? "productos con tiendas identificadas" : "anuncios con ubicación identificada"} en esta provincia.`
+                    : `Sin filtro, buscamos en todo Costa Rica, incluso ${type === "tech" ? "productos sin tienda identificada" : "anuncios sin ubicación indicada"}.`}
                 </p>
               </div>
             )}
@@ -651,7 +688,7 @@ export default function PriceApp() {
                   <div>
                     <b>Ubicación: {locationFilter.province}</b>
                     <p>
-                      {locationFilter.matchedCount} de {locationFilter.totalCount} anuncios coinciden con esta provincia.
+                      {locationFilter.matchedCount} de {locationFilter.totalCount} {result.type === "tech" ? "productos" : "anuncios"} coinciden con esta provincia.
                       {locationFilter.unknownCount > 0 && (
                         <> {locationFilter.unknownCount} sin ubicación identificada quedan fuera del filtro.</>
                       )}

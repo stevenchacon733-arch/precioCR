@@ -847,6 +847,13 @@ footer{border-top:1px solid var(--line);background:white}
 .provinceShape.active path{fill:var(--green);filter:drop-shadow(0 4px 4px rgba(14,88,61,.22))}
 .provinceShape.active text{fill:white}
 .provinceMapHint{margin:0;text-align:center;color:var(--muted);font-size:10px;line-height:1.4}
+.googleMapPreview{margin-top:9px;border-top:1px solid #e2ece6;padding-top:9px}
+.googleMapPreview iframe{
+  display:block;width:100%;height:150px;border:0;border-radius:11px;background:#e8f1ed;
+}
+.googleMapOpen,.storeMapLink{display:inline-block;color:#176447;font-size:11px;font-weight:800}
+.googleMapOpen{margin-top:7px}
+.googleMapOpen:hover,.storeMapLink:hover{text-decoration:underline;text-underline-offset:3px}
 .locationSearchFilter>p{flex-basis:100%;margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
 .locationResultNotice{
   display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -869,6 +876,7 @@ footer{border-top:1px solid var(--line);background:white}
 .storeLocationList li{border-left:2px solid #dcebe3;padding-left:10px;overflow-wrap:anywhere}
 .storeLocationList strong{display:block;font-size:12px;line-height:1.45}
 .storeLocationList span,.storeLocationList small{display:block;color:var(--muted);font-size:11px;line-height:1.5;margin-top:3px}
+.storeLocationList .storeMapLink{margin-top:5px}
 .storeLocationList .branchAvailable{color:var(--green-dark);font-weight:700}
 .storeLocatorLink{display:inline-block;color:var(--green-dark);font-weight:750;font-size:12px;line-height:1.5}
 .storeLocations details+.storeLocatorLink{margin-top:9px}
